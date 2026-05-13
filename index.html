@@ -1095,7 +1095,7 @@ function drawWheel({ sun, moon, rising }) {
   planets.forEach((p) => {
     const i = SIGN_ORDER.indexOf(p.sign);
     if (i < 0) return;
-    const a = (180 + i * 30 + 15 + (p.angleOffset || 0)) * Math.PI / 180;
+    const a = angMid(i) + (p.angleOffset || 0) * Math.PI / 180;
     // line from center
     const inner = pt(a, 30);
     const outer = pt(a, rInner - 4);
@@ -1139,7 +1139,7 @@ function drawWheel({ sun, moon, rising }) {
 function fmtDate(d) {
   if (!d) return '—';
   const [y, m, day] = d.split('-').map(Number);
-  return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return new Date(y, m - 1, day).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 function renderResult(data, meta) {
@@ -1316,7 +1316,7 @@ document.getElementById('save-btn').addEventListener('click', () => {
   const el = document.getElementById('now-stamp');
   if (!el) return;
   const update = () => {
-    el.textContent = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+    el.textContent = new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
   };
   update();
   setInterval(update, 60000);
