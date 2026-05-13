@@ -819,7 +819,7 @@
         <textPath href="#ringpath" startOffset="0">♈   ♉   ♊   ♋   ♌   ♍   ♎   ♏   ♐   ♑   ♒   ♓   </textPath>
       </text>
     </svg>
-    <div class="msg" id="loading-msg">Locating your birthplace…</div>
+    <div class="msg" id="loading-msg" aria-live="polite">Locating your birthplace…</div>
     <div class="sub">please remain still</div>
   </section>
 
@@ -955,7 +955,11 @@ function paintStars() {
     ctx.fill();
   }
 }
-window.addEventListener('resize', paintStars);
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(paintStars, 150);
+});
 paintStars();
 
 /* ────────────────────────────────────────────────────────────────────
@@ -982,6 +986,7 @@ const LOAD_MSGS = [
 ];
 let loadTimer = null;
 function startLoading() {
+  if (loadTimer) clearInterval(loadTimer);
   let i = 0;
   const msgEl = document.getElementById('loading-msg');
   msgEl.textContent = LOAD_MSGS[0];
@@ -1175,6 +1180,7 @@ function renderResult(data, meta) {
   window.lastChartData = { sun: data.sun, moon: data.moon, rising: data.rising };
   drawWheel(window.lastChartData);
 
+  document.title = data.name ? `${data.name}'s chart · Ephemera` : 'Ephemera — your big three';
   document.getElementById('view-result').classList.add('reveal');
   showView('result');
 }
@@ -1275,6 +1281,7 @@ document.getElementById('demo-link').addEventListener('click', showDemo);
 /* Reset */
 document.getElementById('reset-btn').addEventListener('click', () => {
   document.getElementById('submit-btn').disabled = false;
+  document.title = 'Ephemera — your big three';
   showView('intro');
 });
 
