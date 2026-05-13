@@ -2,382 +2,1373 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Your Big Three</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Ephemera — your big three</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Manrope:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    /* ─────────────────────────── tokens ─────────────────────────── */
     :root {
-      --bg: #0d0d1a;
-      --surface: #16162a;
-      --border: #2a2a4a;
-      --accent: #a78bfa;
-      --accent2: #818cf8;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --sun: #fbbf24;
-      --moon: #818cf8;
-      --rising: #34d399;
+      /* midnight (default) */
+      --bg:        #0b0a18;
+      --bg-2:      #14122a;
+      --ink:       #ece4d2;
+      --ink-soft:  #b6ac96;
+      --ink-mute:  #6e6755;
+      --rule:      rgba(236, 228, 210, 0.14);
+      --rule-soft: rgba(236, 228, 210, 0.07);
+      --gold:      #d9b66a;
+      --gold-soft: rgba(217, 182, 106, 0.18);
+      --crimson:   #c47a6b;
+
+      --serif: "Cormorant Garamond", "Hoefler Text", Garamond, serif;
+      --sans:  "Manrope", system-ui, sans-serif;
+      --mono:  "JetBrains Mono", ui-monospace, monospace;
+
+      --max: 1200px;
     }
 
+    [data-theme="daybreak"] {
+      --bg:        #f3ecdc;
+      --bg-2:      #ece2c9;
+      --ink:       #1c1a14;
+      --ink-soft:  #5a5444;
+      --ink-mute:  #908869;
+      --rule:      rgba(28, 26, 20, 0.18);
+      --rule-soft: rgba(28, 26, 20, 0.08);
+      --gold:      #8a5a14;
+      --gold-soft: rgba(138, 90, 20, 0.14);
+      --crimson:   #9b3a28;
+    }
+
+    [data-theme="eclipse"] {
+      --bg:        #06060a;
+      --bg-2:      #0b0b14;
+      --ink:       #f3eee0;
+      --ink-soft:  #a39d8a;
+      --ink-mute:  #4f4a3e;
+      --rule:      rgba(243, 238, 224, 0.10);
+      --rule-soft: rgba(243, 238, 224, 0.04);
+      --gold:      #e8d4a3;
+      --gold-soft: rgba(232, 212, 163, 0.10);
+      --crimson:   #d56655;
+    }
+
+    /* ─────────────────────────── reset ─────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg); color: var(--ink); }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--sans);
+      font-weight: 300;
       min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    input { font: inherit; color: inherit; }
+
+    /* ─────────────────────────── starfield ─────────────────────────── */
+    .stars {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse at 70% 10%, rgba(217, 182, 106, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 10% 80%, rgba(196, 122, 107, 0.05) 0%, transparent 55%);
+      opacity: 1; transition: opacity 0.4s ease;
+    }
+    [data-theme="daybreak"] .stars { opacity: 0.4; }
+    .stars canvas { width: 100%; height: 100%; display: block; }
+
+    /* ─────────────────────────── layout shell ─────────────────────────── */
+    .frame {
+      position: relative; z-index: 1;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: clamp(20px, 4vw, 36px) clamp(20px, 5vw, 56px) 60px;
+      min-height: 100dvh;
+      display: flex; flex-direction: column;
+    }
+
+    /* nav strip */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: clamp(28px, 4vw, 44px);
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: clamp(40px, 6vw, 72px);
+    }
+    .nav .mark {
+      font-family: var(--serif);
+      font-size: 24px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav .mark .glyph {
+      font-size: 22px;
+      color: var(--gold);
+      letter-spacing: -2px;
+    }
+    .nav .meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      display: flex; gap: 18px; align-items: center;
+    }
+    .nav .meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); display: inline-block; }
+    @media (max-width: 640px) { .nav .meta .hide-sm { display: none; } }
+
+    /* ─────────────────────────── intro / form ─────────────────────────── */
+    .intro {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: clamp(40px, 6vw, 88px);
+      align-items: start;
+    }
+    @media (max-width: 880px) { .intro { grid-template-columns: 1fr; gap: 48px; } }
+
+    .pretitle {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin-bottom: 22px;
+      display: flex; gap: 12px; align-items: center;
+    }
+    .pretitle::before {
+      content: ""; display: block; width: 28px; height: 1px; background: currentColor;
+    }
+
+    h1.display {
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: clamp(54px, 10vw, 140px);
+      line-height: 0.94;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      margin-bottom: 28px;
+    }
+    h1.display em {
+      font-style: italic;
+      color: var(--gold);
+      font-weight: 300;
+    }
+
+    .lede {
+      font-family: var(--serif);
+      font-size: clamp(18px, 1.6vw, 22px);
+      line-height: 1.55;
+      color: var(--ink-soft);
+      max-width: 46ch;
+      margin-bottom: 32px;
+      font-weight: 400;
+    }
+
+    .lede em { color: var(--ink); font-style: italic; }
+
+    .pillars {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      max-width: 540px;
+    }
+    .pillar {
+      padding: 22px 12px 20px;
+      border-right: 1px solid var(--rule);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
-    }
-
-    header {
       text-align: center;
-      margin-bottom: 2.5rem;
+    }
+    .pillar:last-child { border-right: 0; }
+    .pillar .g {
+      font-family: var(--serif);
+      font-size: 28px;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .pillar .l {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .pillar .v {
+      font-family: var(--serif);
+      font-size: 16px;
+      color: var(--ink-soft);
+      margin-top: 2px;
+      font-style: italic;
     }
 
-    header h1 {
-      font-size: clamp(1.8rem, 5vw, 2.8rem);
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: -0.02em;
+    /* form */
+    .form {
+      border: 1px solid var(--rule);
+      background: linear-gradient(180deg, var(--bg-2), transparent 80%);
+      padding: clamp(28px, 3.5vw, 44px);
+      position: relative;
     }
-
-    header p {
-      color: var(--muted);
-      margin-top: 0.5rem;
-      font-size: 0.95rem;
+    .form::before {
+      content: ""; position: absolute; top: -1px; left: -1px;
+      width: 18px; height: 18px;
+      border-top: 1px solid var(--gold);
+      border-left: 1px solid var(--gold);
     }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      padding: 2rem;
-      width: 100%;
-      max-width: 480px;
+    .form::after {
+      content: ""; position: absolute; bottom: -1px; right: -1px;
+      width: 18px; height: 18px;
+      border-bottom: 1px solid var(--gold);
+      border-right: 1px solid var(--gold);
     }
-
-    .form-group {
-      margin-bottom: 1.25rem;
+    .form-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin-bottom: 24px;
     }
-
-    label {
+    .field { margin-bottom: 22px; }
+    .field label {
       display: block;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.4rem;
+      color: var(--ink-mute);
+      margin-bottom: 8px;
     }
-
-    input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-      color: var(--text);
-      padding: 0.65rem 0.85rem;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.15s;
-      -webkit-appearance: none;
-    }
-
-    input:focus { border-color: var(--accent); }
-    input::placeholder { color: #4a4a6a; }
-
-    input[type="date"]::-webkit-calendar-picker-indicator,
-    input[type="time"]::-webkit-calendar-picker-indicator {
-      filter: invert(0.6);
-      cursor: pointer;
-    }
-
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-    button {
-      width: 100%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      border: none;
-      border-radius: 0.5rem;
-      padding: 0.85rem;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 0.5rem;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-
-    button:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    /* Loading */
-    #loading {
-      display: none;
-      text-align: center;
-      padding: 2rem 0 1rem;
-      color: var(--muted);
-    }
-
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Results */
-    #results { display: none; width: 100%; max-width: 480px; margin-top: 1.5rem; }
-
-    .signs-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .sign-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      padding: 1rem 0.75rem;
-      text-align: center;
-    }
-
-    .sign-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 0.35rem;
-    }
-
-    .sign-label.sun { color: var(--sun); }
-    .sign-label.moon { color: var(--moon); }
-    .sign-label.rising { color: var(--rising); }
-
-    .sign-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
-    .sign-name { font-size: 0.95rem; font-weight: 600; }
-
-    .analysis-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      padding: 1.5rem;
-    }
-
-    .analysis-card h3 {
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      margin-bottom: 0.85rem;
-    }
-
-    .analysis-card p {
-      line-height: 1.75;
-      color: var(--text);
-      font-size: 0.975rem;
-    }
-
-    .reset-btn {
+    .field input {
       width: 100%;
       background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 0.5rem;
-      padding: 0.65rem;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 1rem;
-      transition: border-color 0.15s, color 0.15s;
+      border: 0;
+      border-bottom: 1px solid var(--rule);
+      padding: 10px 0 12px;
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--ink);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.2s ease;
     }
+    .field input::placeholder { color: var(--ink-mute); font-style: italic; }
+    .field input:focus { border-bottom-color: var(--gold); }
+    .field input[type="date"], .field input[type="time"] {
+      color-scheme: dark;
+    }
+    [data-theme="daybreak"] .field input[type="date"], [data-theme="daybreak"] .field input[type="time"] {
+      color-scheme: light;
+    }
+    .field input[type="date"]::-webkit-calendar-picker-indicator,
+    .field input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.6) sepia(0.4) saturate(2);
+      cursor: pointer;
+    }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 
-    .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+    /* segmented compound inputs (date / time) */
+    .seg-input {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      border-bottom: 1px solid var(--rule);
+      padding: 4px 0 6px;
+      transition: border-color 0.2s ease;
+    }
+    .seg-input:focus-within { border-bottom-color: var(--gold); }
+    .seg-input > .div {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--ink-mute);
+      padding: 6px 2px;
+      pointer-events: none;
+      user-select: none;
+    }
+    .seg-input input,
+    .seg-input select {
+      font-family: var(--serif);
+      font-size: 22px;
+      background: transparent;
+      border: 0;
+      color: var(--ink);
+      padding: 8px 6px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      border-radius: 0;
+    }
+    .seg-input input { text-align: center; }
+    .seg-input input::placeholder { color: var(--ink-mute); font-style: italic; }
+    .seg-input input::-webkit-outer-spin-button,
+    .seg-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .seg-input input[type="number"] { -moz-appearance: textfield; }
+    .seg-input .w-day { width: 56px; }
+    .seg-input .w-year { width: 80px; }
+    .seg-input .w-2 { width: 52px; }
+    .seg-input select {
+      cursor: pointer;
+      padding-right: 22px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'><path d='M1 1l4 5 4-5' fill='none' stroke='%23b6ac96' stroke-width='1.2'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+    }
+    .seg-input select::-ms-expand { display: none; }
+    .seg-input select option { background: var(--bg-2); color: var(--ink); }
+    .seg-input.month-wide { flex-wrap: nowrap; }
+    .seg-input .m-pick { min-width: 130px; flex: 0 1 auto; }
 
-    .error-msg {
-      background: #2d1b1b;
-      border: 1px solid #7f1d1d;
-      color: #fca5a5;
-      border-radius: 0.5rem;
-      padding: 0.75rem 1rem;
-      font-size: 0.9rem;
-      margin-top: 1rem;
+    .submit {
+      width: 100%;
+      margin-top: 12px;
+      padding: 18px 24px;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .submit:hover:not(:disabled) { background: var(--gold); color: var(--bg); }
+    .submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .submit .arrow { font-family: var(--serif); font-size: 18px; letter-spacing: 0; }
+
+    .demo-link {
+      margin-top: 18px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      text-align: center;
+      display: block;
+      width: 100%;
+    }
+    .demo-link span { border-bottom: 1px solid var(--rule); padding-bottom: 2px; transition: color 0.2s ease, border-color 0.2s ease; }
+    .demo-link:hover span { color: var(--gold); border-color: var(--gold); }
+
+    .error {
+      margin-top: 18px;
+      padding: 12px 16px;
+      border: 1px solid var(--crimson);
+      background: rgba(196, 122, 107, 0.08);
+      color: var(--crimson);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
       display: none;
     }
 
-    #name-display {
+    /* ─────────────────────────── loading ─────────────────────────── */
+    .loading {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      padding: 60px 0;
       text-align: center;
-      margin-bottom: 1.25rem;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--accent);
     }
+    .loading.on { display: flex; }
+    .loading .ring {
+      width: 220px; height: 220px;
+      animation: rot 24s linear infinite;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+    .loading .ring text {
+      font-family: var(--serif);
+      fill: var(--gold);
+      font-size: 22px;
+    }
+    .loading .msg {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(22px, 3vw, 32px);
+      color: var(--ink-soft);
+      min-height: 1.5em;
+      transition: opacity 0.5s ease;
+    }
+    .loading .sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+
+    /* ─────────────────────────── result ─────────────────────────── */
+    .result { display: none; flex-direction: column; gap: clamp(48px, 6vw, 80px); }
+    .result.on { display: flex; }
+
+    .result-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 28px;
+    }
+    @media (max-width: 640px) { .result-head { grid-template-columns: 1fr; } .result-head .stamp { text-align: left; } }
+    .result-head .who {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .result-head h2 {
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: clamp(48px, 8vw, 96px);
+      line-height: 0.95;
+      letter-spacing: -0.025em;
+      margin-top: 8px;
+    }
+    .result-head h2 em { font-style: italic; color: var(--gold); }
+    .result-head .stamp {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      text-align: right;
+      line-height: 1.8;
+    }
+    .result-head .stamp b { color: var(--ink-soft); font-weight: 400; }
+
+    .chart-section {
+      display: flex;
+      justify-content: center;
+    }
+
+    .wheel-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 620px;
+      aspect-ratio: 1;
+      margin: 0 auto;
+    }
+    .wheel-wrap svg { width: 100%; height: 100%; display: block; }
+
+    .placements {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (max-width: 720px) { .placements { grid-template-columns: 1fr; } }
+
+    .placement {
+      padding: clamp(28px, 4vw, 44px) 24px;
+      border-right: 1px solid var(--rule);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+    }
+    .placement:last-child { border-right: 0; }
+    @media (max-width: 720px) {
+      .placement { border-right: 0; border-bottom: 1px solid var(--rule); }
+      .placement:last-child { border-bottom: 0; }
+    }
+    .placement .body-glyph {
+      font-family: var(--serif);
+      font-size: 44px;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .placement .role {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .placement .sign {
+      font-family: var(--serif);
+      font-size: clamp(34px, 4vw, 44px);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      line-height: 1.05;
+      margin-top: 4px;
+    }
+    .placement .sign .zg {
+      font-size: 0.7em;
+      color: var(--ink-mute);
+      margin-left: 6px;
+    }
+    .placement .tag {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 17px;
+      color: var(--ink-soft);
+      margin-top: 4px;
+    }
+    .placement .meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--rule-soft);
+      width: 60%;
+    }
+    .placement .meta b { color: var(--ink-soft); font-weight: 400; }
+
+    /* synthesis */
+    .synthesis {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: clamp(24px, 4vw, 64px);
+      padding-top: clamp(36px, 5vw, 60px);
+      border-top: 1px solid var(--rule);
+    }
+    @media (max-width: 720px) { .synthesis { grid-template-columns: 1fr; } }
+    .synthesis .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      line-height: 1.6;
+    }
+    .synthesis .label .roman {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 28px;
+      letter-spacing: 0;
+      color: var(--gold);
+      text-transform: none;
+      display: block;
+      margin-top: 8px;
+    }
+    .synthesis .body {
+      font-family: var(--serif);
+      font-size: clamp(22px, 2.4vw, 30px);
+      line-height: 1.5;
+      color: var(--ink);
+      font-weight: 400;
+      max-width: 38ch;
+    }
+    .synthesis .body::first-letter {
+      font-size: 1.6em;
+      float: left;
+      line-height: 0.9;
+      padding: 6px 10px 0 0;
+      color: var(--gold);
+      font-style: italic;
+    }
+
+    /* footer of result */
+    .actions {
+      display: flex;
+      gap: 24px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      padding-top: 32px;
+      border-top: 1px solid var(--rule);
+    }
+    .actions .lhs {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .actions .rhs { display: flex; gap: 8px; }
+    .ghost-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 14px 22px;
+      border: 1px solid var(--rule);
+      color: var(--ink-soft);
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+    .ghost-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ─────────────────────────── tweaks ─────────────────────────── */
+    .tweaks {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 300px;
+      max-width: calc(100vw - 32px);
+      background: var(--bg-2);
+      border: 1px solid var(--rule);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+      padding: 18px;
+      z-index: 100;
+      font-family: var(--mono);
+      transform: translateY(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .tweaks.on { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .tweaks .th {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .tweaks .th .x { font-size: 16px; color: var(--ink-mute); padding: 0 4px; }
+    .tweaks .th .x:hover { color: var(--ink); }
+    .tweaks .grp { margin-bottom: 14px; }
+    .tweaks .grp:last-child { margin-bottom: 0; }
+    .tweaks .lbl {
+      font-size: 9px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin-bottom: 8px;
+    }
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border: 1px solid var(--rule);
+    }
+    .seg.two  { grid-template-columns: 1fr 1fr; }
+    .seg.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .tweaks .hint {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+    .seg button {
+      padding: 10px 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      border-right: 1px solid var(--rule);
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .seg button:last-child { border-right: 0; }
+    .seg button.on { background: var(--gold); color: var(--bg); }
+    .demo-btn {
+      width: 100%;
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      margin-top: 6px;
+    }
+    .demo-btn:hover { background: var(--gold); color: var(--bg); }
+
+    /* ─────────────────────────── motion ─────────────────────────── */
+    .fade-in { animation: fade 0.7s ease both; }
+    @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .reveal > * {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: rev 0.7s cubic-bezier(.2,.6,.2,1) forwards;
+    }
+    .reveal > *:nth-child(1) { animation-delay: 0.05s; }
+    .reveal > *:nth-child(2) { animation-delay: 0.20s; }
+    .reveal > *:nth-child(3) { animation-delay: 0.35s; }
+    .reveal > *:nth-child(4) { animation-delay: 0.50s; }
+    .reveal > *:nth-child(5) { animation-delay: 0.65s; }
+    @keyframes rev { to { opacity: 1; transform: none; } }
   </style>
 </head>
-<body>
+<body data-theme="midnight" data-wheel="classic">
 
-<header>
-  <h1>Your Big Three</h1>
-  <p>Sun · Moon · Rising — synthesized by AI</p>
-</header>
+<div class="stars"><canvas id="stars-canvas"></canvas></div>
 
-<div class="card" id="form-card">
-  <div class="form-group">
-    <label for="name">Your name (optional)</label>
-    <input type="text" id="name" placeholder="e.g. Alex" autocomplete="off" />
-  </div>
-  <div class="row">
-    <div class="form-group">
-      <label for="birthDate">Birth date</label>
-      <input type="date" id="birthDate" required />
+<div class="frame">
+
+  <!-- nav -->
+  <div class="nav">
+    <div class="mark">
+      <span class="glyph">☉☽↑</span>
+      <span>Ephemera</span>
     </div>
-    <div class="form-group">
-      <label for="birthTime">Birth time</label>
-      <input type="time" id="birthTime" required />
+    <div class="meta">
+      <span><span class="dot"></span> Live ephemeris</span>
+      <span class="hide-sm" id="now-stamp">—</span>
     </div>
   </div>
-  <div class="form-group">
-    <label for="location">Birth city</label>
-    <input type="text" id="location" placeholder="e.g. Tokyo, Japan" autocomplete="off" required />
-  </div>
 
-  <div id="loading">
-    <div class="spinner"></div>
-    <p id="loading-msg">Calculating your chart…</p>
-  </div>
+  <!-- view: intro / form -->
+  <section class="intro view" id="view-intro">
+    <div class="reveal">
+      <div class="pretitle">№ 001 · The Big Three</div>
+      <h1 class="display">Read your<br/><em>celestial</em><br/>self-portrait.</h1>
+      <p class="lede">Three placements decide more about you than the headline sign on the magazine cover. Your <em>Sun</em> is what you radiate. Your <em>Moon</em> is what you protect. Your <em>Rising</em> is the door you answer the world in.</p>
+      <div class="pillars">
+        <div class="pillar">
+          <div class="g">☉</div>
+          <div class="l">Sun</div>
+          <div class="v">essence</div>
+        </div>
+        <div class="pillar">
+          <div class="g">☽</div>
+          <div class="l">Moon</div>
+          <div class="v">interior</div>
+        </div>
+        <div class="pillar">
+          <div class="g">↑</div>
+          <div class="l">Rising</div>
+          <div class="v">aperture</div>
+        </div>
+      </div>
+    </div>
 
-  <div class="error-msg" id="error-msg"></div>
+    <form class="form" id="chart-form" novalidate>
+      <div class="form-title">Birth data</div>
+      <div class="field">
+        <label for="name">Name <span style="color: var(--ink-mute); text-transform: none; letter-spacing: 0;">(optional)</span></label>
+        <input type="text" id="name" placeholder="What shall we call you?" autocomplete="off" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Born on</label>
+          <div class="seg-input month-wide">
+            <select id="b-month" class="m-pick" required>
+              <option value="">Month…</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+            <span class="div">/</span>
+            <input type="number" id="b-day" class="w-day" placeholder="DD" min="1" max="31" inputmode="numeric" required />
+            <span class="div">/</span>
+            <input type="number" id="b-year" class="w-year" placeholder="YYYY" min="1900" max="2030" inputmode="numeric" required />
+          </div>
+        </div>
+        <div class="field">
+          <label>at</label>
+          <div class="seg-input">
+            <input type="number" id="b-hour" class="w-2" placeholder="HH" min="1" max="12" inputmode="numeric" required />
+            <span class="div">:</span>
+            <input type="number" id="b-min" class="w-2" placeholder="MM" min="0" max="59" inputmode="numeric" required />
+            <select id="b-ampm" required>
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="location">City of birth</label>
+        <input type="text" id="location" placeholder="e.g. Kyoto, Japan" autocomplete="off" required />
+      </div>
 
-  <button id="submit-btn" onclick="submitChart()">Calculate My Chart</button>
+      <button type="submit" class="submit" id="submit-btn">
+        <span>Cast my chart</span>
+        <span class="arrow">→</span>
+      </button>
+
+      <button type="button" class="demo-link" id="demo-link"><span>or read a sample chart →</span></button>
+
+      <div class="error" id="error-msg"></div>
+    </form>
+  </section>
+
+  <!-- view: loading -->
+  <section class="loading view" id="view-loading">
+    <svg class="ring" viewBox="0 0 240 240">
+      <defs>
+        <path id="ringpath" d="M 120 120 m -100 0 a 100 100 0 1 1 200 0 a 100 100 0 1 1 -200 0" />
+      </defs>
+      <circle cx="120" cy="120" r="100" fill="none" stroke="var(--rule)" stroke-width="1"/>
+      <circle cx="120" cy="120" r="78" fill="none" stroke="var(--rule-soft)" stroke-width="1"/>
+      <circle cx="120" cy="120" r="4" fill="var(--gold)"/>
+      <text>
+        <textPath href="#ringpath" startOffset="0">♈   ♉   ♊   ♋   ♌   ♍   ♎   ♏   ♐   ♑   ♒   ♓   </textPath>
+      </text>
+    </svg>
+    <div class="msg" id="loading-msg">Locating your birthplace…</div>
+    <div class="sub">please remain still</div>
+  </section>
+
+  <!-- view: result -->
+  <section class="result view" id="view-result">
+    <div class="result-head">
+      <div>
+        <div class="who" id="who-line">Chart of</div>
+        <h2 id="head-line"><em id="head-name">—</em></h2>
+      </div>
+      <div class="stamp">
+        <div><b id="stamp-date">—</b></div>
+        <div id="stamp-time">—</div>
+        <div id="stamp-loc">—</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="wheel-wrap" id="wheel-wrap"></div>
+    </div>
+
+    <div class="placements" id="placements"></div>
+
+    <div class="synthesis">
+      <div class="label">
+        Synthesis
+        <span class="roman">portrait</span>
+      </div>
+      <div class="body" id="analysis-text"></div>
+    </div>
+
+    <div class="actions">
+      <div class="lhs" id="ai-stamp">Read by gpt-4o-mini · ephemera v0.1</div>
+      <div class="rhs">
+        <button class="ghost-btn" id="save-btn">Save chart ↓</button>
+        <button class="ghost-btn" id="reset-btn">Start over ←</button>
+      </div>
+    </div>
+  </section>
 </div>
 
-<div id="results">
-  <div id="name-display"></div>
-  <div class="signs-grid">
-    <div class="sign-card">
-      <div class="sign-label sun">Sun</div>
-      <div class="sign-icon">☀️</div>
-      <div class="sign-name" id="sun-sign">—</div>
+<!-- tweaks panel -->
+<div class="tweaks" id="tweaks">
+  <div class="th">
+    <span>Tweaks</span>
+    <button class="x" id="tweaks-close" aria-label="Close">×</button>
+  </div>
+  <div class="grp">
+    <div class="lbl">Theme</div>
+    <div class="seg four" data-tweak="theme">
+      <button data-val="auto" class="on">Auto</button>
+      <button data-val="midnight">Night</button>
+      <button data-val="daybreak">Day</button>
+      <button data-val="eclipse">Eclipse</button>
     </div>
-    <div class="sign-card">
-      <div class="sign-label moon">Moon</div>
-      <div class="sign-icon">🌙</div>
-      <div class="sign-name" id="moon-sign">—</div>
-    </div>
-    <div class="sign-card">
-      <div class="sign-label rising">Rising</div>
-      <div class="sign-icon">⬆️</div>
-      <div class="sign-name" id="rising-sign">—</div>
+    <div class="hint" id="auto-hint">Follows your local clock · Day 06–19, Night otherwise</div>
+  </div>
+  <div class="grp">
+    <div class="lbl">Wheel</div>
+    <div class="seg two" data-tweak="wheel">
+      <button data-val="classic" class="on">Classic</button>
+      <button data-val="minimal">Minimal</button>
     </div>
   </div>
-  <div class="analysis-card">
-    <h3>Your Synthesis</h3>
-    <p id="analysis-text"></p>
+  <div class="grp">
+    <button class="demo-btn" id="tweak-demo">Show sample chart</button>
   </div>
-  <button class="reset-btn" onclick="resetForm()">← Start over</button>
 </div>
 
 <script>
-  const loadingMessages = [
-    'Locating your birthplace…',
-    'Calculating your chart…',
-    'Reading the stars…',
-    'Synthesizing your personality…',
+/* ────────────────────────────────────────────────────────────────────
+   Astrology data — element + modality + one-line vibe per sign
+   ──────────────────────────────────────────────────────────────────── */
+const SIGN_DATA = {
+  Aries:       { glyph: '♈', element: 'Fire',  modality: 'Cardinal', tag: 'The Initiator' },
+  Taurus:      { glyph: '♉', element: 'Earth', modality: 'Fixed',    tag: 'The Steady' },
+  Gemini:      { glyph: '♊', element: 'Air',   modality: 'Mutable',  tag: 'The Curious' },
+  Cancer:      { glyph: '♋', element: 'Water', modality: 'Cardinal', tag: 'The Tender' },
+  Leo:         { glyph: '♌', element: 'Fire',  modality: 'Fixed',    tag: 'The Sovereign' },
+  Virgo:       { glyph: '♍', element: 'Earth', modality: 'Mutable',  tag: 'The Discerning' },
+  Libra:       { glyph: '♎', element: 'Air',   modality: 'Cardinal', tag: 'The Diplomat' },
+  Scorpio:     { glyph: '♏', element: 'Water', modality: 'Fixed',    tag: 'The Alchemist' },
+  Sagittarius: { glyph: '♐', element: 'Fire',  modality: 'Mutable',  tag: 'The Seeker' },
+  Capricorn:   { glyph: '♑', element: 'Earth', modality: 'Cardinal', tag: 'The Architect' },
+  Aquarius:    { glyph: '♒', element: 'Air',   modality: 'Fixed',    tag: 'The Visionary' },
+  Pisces:      { glyph: '♓', element: 'Water', modality: 'Mutable',  tag: 'The Dreamer' },
+};
+const SIGN_ORDER = Object.keys(SIGN_DATA);
+
+const BODIES = {
+  Sun:    { glyph: '☉', role: 'Sun',    desc: 'The radiating self' },
+  Moon:   { glyph: '☽', role: 'Moon',   desc: 'The interior weather' },
+  Rising: { glyph: '↑', role: 'Rising', desc: 'The aperture, the doorframe' },
+};
+
+/* ────────────────────────────────────────────────────────────────────
+   Starfield — small dots painted to canvas
+   ──────────────────────────────────────────────────────────────────── */
+function paintStars() {
+  const c = document.getElementById('stars-canvas');
+  if (!c) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = c.parentElement.clientWidth;
+  const h = window.innerHeight;
+  c.width = w * dpr; c.height = h * dpr;
+  c.style.width = w + 'px'; c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+  const isLight = document.body.dataset.theme === 'daybreak';
+  const count = Math.floor((w * h) / 4500);
+  for (let i = 0; i < count; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    const r = Math.random() * 1.2 + 0.2;
+    const a = Math.random() * 0.6 + 0.05;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = isLight
+      ? `rgba(28, 26, 20, ${a * 0.4})`
+      : `rgba(236, 228, 210, ${a})`;
+    ctx.fill();
+  }
+  // a handful of brighter "gold" stars
+  for (let i = 0; i < 8; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    ctx.beginPath();
+    ctx.arc(x, y, 1.4, 0, Math.PI * 2);
+    ctx.fillStyle = isLight ? 'rgba(138, 90, 20, 0.5)' : 'rgba(217, 182, 106, 0.85)';
+    ctx.fill();
+  }
+}
+window.addEventListener('resize', paintStars);
+paintStars();
+
+/* ────────────────────────────────────────────────────────────────────
+   View switching
+   ──────────────────────────────────────────────────────────────────── */
+function showView(name) {
+  ['intro','loading','result'].forEach(v => {
+    const el = document.getElementById('view-' + v);
+    el.classList.toggle('on', v === name);
+    if (v !== 'loading') el.style.display = v === name ? '' : 'none';
+  });
+  // loading uses flex; manage separately
+  const loading = document.getElementById('view-loading');
+  loading.style.display = name === 'loading' ? 'flex' : 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+showView('intro');
+
+/* ────────────────────────────────────────────────────────────────────
+   Loading messages — slow, poetic
+   ──────────────────────────────────────────────────────────────────── */
+const LOAD_MSGS = [
+  'Locating your birthplace…',
+  'Asking the planets where they stood…',
+  'Reading the ascending degree…',
+  'Resolving timezone and meridian…',
+  'Drawing the wheel…',
+  'Synthesizing your portrait…',
+];
+let loadTimer = null;
+function startLoading() {
+  let i = 0;
+  const msgEl = document.getElementById('loading-msg');
+  msgEl.textContent = LOAD_MSGS[0];
+  loadTimer = setInterval(() => {
+    i = (i + 1) % LOAD_MSGS.length;
+    msgEl.style.opacity = '0';
+    setTimeout(() => {
+      msgEl.textContent = LOAD_MSGS[i];
+      msgEl.style.opacity = '1';
+    }, 320);
+  }, 2400);
+}
+function stopLoading() { clearInterval(loadTimer); loadTimer = null; }
+
+/* ────────────────────────────────────────────────────────────────────
+   Chart wheel SVG — drawn from data
+   ──────────────────────────────────────────────────────────────────── */
+function drawWheel({ sun, moon, rising }) {
+  const wrap = document.getElementById('wheel-wrap');
+  const cx = 280, cy = 280, size = 560;
+  const rOuter = 260, rGlyph = 235, rTickOut = 210, rTickIn = 200;
+  const rInner = 192, rPlanetRing = 145, rPlanetIn = 90;
+  const minimal = document.body.dataset.wheel === 'minimal';
+
+  // Helper: SVG angle for sign index — Aries (0) at 9 o'clock (left), CCW like a real chart
+  // In SVG: 0° = right (east), positive = CW. We want sign 0 at 180°, sign 1 at 210°, etc going CW
+  // so the sign appears to wrap counter-clockwise visually — actually let's go CW so it matches print convention top-half.
+  // We'll place: angle(i) = 180 + i*30, with i=0 (Aries) at 180° (left).
+  const ang = (i) => (180 + i * 30) * Math.PI / 180;
+  const angMid = (i) => (180 + i * 30 + 15) * Math.PI / 180;
+  const pt = (a, r) => ({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+
+  let s = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+
+  // Outer & inner circles
+  s += `<circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="var(--rule)" stroke-width="1"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="var(--rule)" stroke-width="1"/>`;
+  if (!minimal) {
+    s += `<circle cx="${cx}" cy="${cy}" r="${rOuter - 14}" fill="none" stroke="var(--rule-soft)" stroke-width="1"/>`;
+  }
+
+  // 12 sector dividers
+  for (let i = 0; i < 12; i++) {
+    const a = ang(i);
+    const p1 = pt(a, rInner);
+    const p2 = pt(a, rOuter);
+    s += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="var(--rule)" stroke-width="1"/>`;
+  }
+
+  // sign glyphs
+  for (let i = 0; i < 12; i++) {
+    const a = angMid(i);
+    const p = pt(a, rGlyph);
+    const name = SIGN_ORDER[i];
+    const isPlacement = (name === sun || name === moon || name === rising);
+    s += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central"
+            font-family="var(--serif)" font-size="22"
+            fill="${isPlacement ? 'var(--gold)' : 'var(--ink-soft)'}"
+            opacity="${isPlacement ? '1' : '0.55'}">${SIGN_DATA[name].glyph}</text>`;
+  }
+
+  // degree ticks (every 5°)
+  if (!minimal) {
+    for (let d = 0; d < 360; d += 5) {
+      const aRad = (180 + d) * Math.PI / 180;
+      const major = d % 30 === 0;
+      const r1 = major ? rTickOut + 4 : rTickOut + 1;
+      const r2 = major ? rTickIn - 2 : rTickIn + 3;
+      const p1 = pt(aRad, r1);
+      const p2 = pt(aRad, r2);
+      s += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="var(--rule)" stroke-width="${major ? 1 : 0.5}"/>`;
+    }
+  }
+
+  // inner spokes from center
+  if (!minimal) {
+    // light cross
+    s += `<line x1="${cx - rInner}" y1="${cy}" x2="${cx + rInner}" y2="${cy}" stroke="var(--rule-soft)" stroke-width="1"/>`;
+    s += `<line x1="${cx}" y1="${cy - rInner}" x2="${cx}" y2="${cy + rInner}" stroke="var(--rule-soft)" stroke-width="1"/>`;
+  }
+
+  // place planet markers at the middle of their sign segment
+  const planets = [
+    { name: 'Sun',    sign: sun,    glyph: '☉', r: rPlanetRing },
+    { name: 'Moon',   sign: moon,   glyph: '☽', r: rPlanetRing - 35 },
+    { name: 'Rising', sign: rising, glyph: '↑', r: rPlanetRing - 70 },
   ];
 
-  let loadingInterval;
+  // If same sign, fan them slightly along the arc
+  const signGroups = {};
+  planets.forEach(p => { (signGroups[p.sign] = signGroups[p.sign] || []).push(p); });
+  Object.values(signGroups).forEach(group => {
+    group.forEach((p, idx) => { p.angleOffset = (idx - (group.length - 1) / 2) * 8; });
+  });
 
-  function startLoadingMessages() {
-    let i = 0;
-    document.getElementById('loading-msg').textContent = loadingMessages[0];
-    loadingInterval = setInterval(() => {
-      i = (i + 1) % loadingMessages.length;
-      document.getElementById('loading-msg').textContent = loadingMessages[i];
-    }, 2200);
+  planets.forEach((p) => {
+    const i = SIGN_ORDER.indexOf(p.sign);
+    if (i < 0) return;
+    const a = (180 + i * 30 + 15 + (p.angleOffset || 0)) * Math.PI / 180;
+    // line from center
+    const inner = pt(a, 30);
+    const outer = pt(a, rInner - 4);
+    s += `<line x1="${inner.x}" y1="${inner.y}" x2="${outer.x}" y2="${outer.y}" stroke="var(--gold-soft)" stroke-width="1" stroke-dasharray="2 4"/>`;
+
+    // glyph
+    const g = pt(a, p.r);
+    s += `<circle cx="${g.x}" cy="${g.y}" r="22" fill="var(--bg)" stroke="var(--gold)" stroke-width="1"/>`;
+    s += `<text x="${g.x}" y="${g.y}" text-anchor="middle" dominant-baseline="central"
+            font-family="var(--serif)" font-size="22" fill="var(--gold)">${p.glyph}</text>`;
+  });
+
+  // center mark
+  s += `<circle cx="${cx}" cy="${cy}" r="3" fill="var(--gold)"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="18" fill="none" stroke="var(--rule)" stroke-width="1"/>`;
+
+  // cardinal hint labels (N/S/E/W → ASC/MC/DSC/IC in real astrology, but we simplify)
+  if (!minimal) {
+    const cardinals = [
+      { label: 'ASC', a: 180 },
+      { label: 'MC',  a: 270 },
+      { label: 'DSC', a: 0   },
+      { label: 'IC',  a: 90  },
+    ];
+    cardinals.forEach(c => {
+      const aRad = c.a * Math.PI / 180;
+      const p = pt(aRad, rOuter + 18);
+      s += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central"
+              font-family="var(--mono)" font-size="9" letter-spacing="2"
+              fill="var(--ink-mute)">${c.label}</text>`;
+    });
   }
 
-  function stopLoadingMessages() {
-    clearInterval(loadingInterval);
-  }
+  s += `</svg>`;
+  wrap.innerHTML = s;
+}
 
-  async function submitChart() {
-    const name = document.getElementById('name').value.trim();
-    const birthDate = document.getElementById('birthDate').value;
-    const birthTime = document.getElementById('birthTime').value;
-    const location = document.getElementById('location').value.trim();
+/* ────────────────────────────────────────────────────────────────────
+   Render the full result
+   ──────────────────────────────────────────────────────────────────── */
+function renderResult(data, meta) {
+  document.getElementById('head-name').textContent = data.name || 'A chart, cast';
+  document.getElementById('who-line').textContent = data.name ? 'Chart of' : 'Cast on the spot,';
 
-    const errEl = document.getElementById('error-msg');
-    errEl.style.display = 'none';
+  const fmtDate = (d) => {
+    if (!d) return '—';
+    const [y, m, day] = d.split('-').map(Number);
+    return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+  document.getElementById('stamp-date').textContent = fmtDate(meta.birthDate);
+  document.getElementById('stamp-time').textContent = meta.birthTime || '—';
+  document.getElementById('stamp-loc').textContent  = meta.location || '—';
 
-    if (!birthDate || !birthTime || !location) {
-      errEl.textContent = 'Please fill in birth date, time, and city.';
-      errEl.style.display = 'block';
-      return;
+  const placements = [
+    { key: 'Sun',    sign: data.sun },
+    { key: 'Moon',   sign: data.moon },
+    { key: 'Rising', sign: data.rising },
+  ];
+
+  const pEl = document.getElementById('placements');
+  pEl.innerHTML = placements.map(p => {
+    const sd = SIGN_DATA[p.sign] || { glyph: '?', element: '—', modality: '—', tag: '' };
+    return `
+      <div class="placement">
+        <div class="body-glyph">${BODIES[p.key].glyph}</div>
+        <div class="role">${BODIES[p.key].role} in</div>
+        <div class="sign">${p.sign}<span class="zg">${sd.glyph}</span></div>
+        <div class="tag">${sd.tag}</div>
+        <div class="meta"><b>${sd.element}</b> · ${sd.modality}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('analysis-text').textContent = data.analysis;
+
+  drawWheel({ sun: data.sun, moon: data.moon, rising: data.rising });
+
+  document.getElementById('view-result').classList.add('reveal');
+  showView('result');
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Auto-advance for segmented date / time inputs
+   ──────────────────────────────────────────────────────────────────── */
+function wireAdvance(fromId, toId, max) {
+  const from = document.getElementById(fromId);
+  const to = document.getElementById(toId);
+  if (!from || !to) return;
+  from.addEventListener('input', () => {
+    const v = from.value;
+    if (v.length >= 2 || Number(v) > Math.floor(max / 10)) {
+      // jump when the value can't sensibly grow further
+      if (v.length >= 2) to.focus();
     }
+  });
+}
+wireAdvance('b-day', 'b-year', 31);
+wireAdvance('b-hour', 'b-min', 12);
+wireAdvance('b-min', 'b-ampm', 59);
+document.getElementById('b-month').addEventListener('change', () => {
+  if (document.getElementById('b-month').value) document.getElementById('b-day').focus();
+});
 
-    const btn = document.getElementById('submit-btn');
-    const loading = document.getElementById('loading');
-    btn.disabled = true;
-    loading.style.display = 'block';
-    startLoadingMessages();
+/* ────────────────────────────────────────────────────────────────────
+   Form submit — call /api/chart
+   ──────────────────────────────────────────────────────────────────── */
+const form = document.getElementById('chart-form');
+const pad = (n) => String(n).padStart(2, '0');
 
-    try {
-      const res = await fetch('/api/chart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, birthDate, birthTime, location }),
-      });
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('name').value.trim();
+  const month = document.getElementById('b-month').value;
+  const day   = document.getElementById('b-day').value;
+  const year  = document.getElementById('b-year').value;
+  let hour    = parseInt(document.getElementById('b-hour').value, 10);
+  const min   = document.getElementById('b-min').value;
+  const ampm  = document.getElementById('b-ampm').value;
+  const location = document.getElementById('location').value.trim();
 
-      const data = await res.json();
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong. Please try again.');
-      }
-
-      stopLoadingMessages();
-      loading.style.display = 'none';
-      document.getElementById('form-card').style.display = 'none';
-
-      document.getElementById('sun-sign').textContent = data.sun;
-      document.getElementById('moon-sign').textContent = data.moon;
-      document.getElementById('rising-sign').textContent = data.rising;
-      document.getElementById('analysis-text').textContent = data.analysis;
-
-      const nameDisplay = document.getElementById('name-display');
-      if (data.name) {
-        nameDisplay.textContent = data.name + "'s Chart";
-        nameDisplay.style.display = 'block';
-      } else {
-        nameDisplay.style.display = 'none';
-      }
-
-      document.getElementById('results').style.display = 'block';
-    } catch (err) {
-      stopLoadingMessages();
-      loading.style.display = 'none';
-      btn.disabled = false;
-      errEl.textContent = err.message;
-      errEl.style.display = 'block';
-    }
+  // validation
+  if (!month || !day || !year || !document.getElementById('b-hour').value || min === '' || !location) {
+    errEl.textContent = 'A date, a time and a city — all three are needed.';
+    errEl.style.display = 'block'; return;
   }
+  if (+year < 1900 || +year > 2030) { errEl.textContent = 'That year looks off. Try a four-digit year.'; errEl.style.display='block'; return; }
+  if (+day < 1 || +day > 31)         { errEl.textContent = 'Day must be 1–31.'; errEl.style.display='block'; return; }
+  if (hour < 1 || hour > 12)         { errEl.textContent = 'Hour must be 1–12.'; errEl.style.display='block'; return; }
+  if (+min < 0 || +min > 59)         { errEl.textContent = 'Minute must be 0–59.'; errEl.style.display='block'; return; }
 
-  function resetForm() {
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('form-card').style.display = 'block';
-    document.getElementById('submit-btn').disabled = false;
+  // convert 12-hour AM/PM to 24-hour
+  if (ampm === 'AM' && hour === 12) hour = 0;
+  else if (ampm === 'PM' && hour !== 12) hour += 12;
+
+  const birthDate = `${year}-${pad(month)}-${pad(day)}`;
+  const birthTime = `${pad(hour)}:${pad(min)}`;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  startLoading();
+  showView('loading');
+
+  try {
+    const res = await fetch('/api/chart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, birthDate, birthTime, location }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'The stars are uncooperative. Try again.');
+
+    stopLoading();
+    renderResult(data, { birthDate, birthTime, location });
+  } catch (err) {
+    stopLoading();
+    showView('intro');
+    btn.disabled = false;
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
   }
+});
+
+/* Demo chart — bypasses API for showcase */
+function showDemo() {
+  const demo = {
+    name: 'Mira Aldebaran',
+    sun: 'Scorpio',
+    moon: 'Pisces',
+    rising: 'Leo',
+    analysis: 'You move through the world with the regal, sun-warmed assurance of a Leo rising — heads turn, rooms widen — but beneath the gold lies a Scorpio sun that watches everything twice and forgives almost nothing without first understanding why. Your Pisces moon softens the whole architecture: it lets you weep at songs, fall asleep in baths, and read the unsaid sentence in a friend\u2019s pause. The result is someone luminous on the surface, oceanic underneath, and quietly, lethally observant in between — a person whose loyalty, once given, is the kind that rearranges weather.'
+  };
+  renderResult(demo, { birthDate: '1992-11-04', birthTime: '03:17', location: 'Kyoto, Japan' });
+}
+document.getElementById('demo-link').addEventListener('click', showDemo);
+
+/* Reset */
+document.getElementById('reset-btn').addEventListener('click', () => {
+  document.getElementById('submit-btn').disabled = false;
+  showView('intro');
+});
+
+/* Save (download PNG of wheel + summary) */
+document.getElementById('save-btn').addEventListener('click', () => {
+  const node = document.querySelector('.wheel-wrap svg');
+  if (!node) return;
+  const xml = new XMLSerializer().serializeToString(node);
+  const blob = new Blob([xml], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ephemera-chart.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* now stamp */
+(function stampNow() {
+  const el = document.getElementById('now-stamp');
+  if (!el) return;
+  const d = new Date();
+  el.textContent = d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+})();
+
+/* ────────────────────────────────────────────────────────────────────
+   Tweaks panel — vanilla, follows the host protocol
+   ──────────────────────────────────────────────────────────────────── */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "auto",
+  "wheel": "classic"
+}/*EDITMODE-END*/;
+
+let tweaks = { ...TWEAK_DEFAULTS };
+
+function effectiveTheme() {
+  if (tweaks.theme !== 'auto') return tweaks.theme;
+  const h = new Date().getHours();
+  return (h >= 6 && h < 19) ? 'daybreak' : 'midnight';
+}
+
+function applyTweaks() {
+  document.body.dataset.theme = effectiveTheme();
+  document.body.dataset.wheel = tweaks.wheel;
+  // hint visibility
+  const hint = document.getElementById('auto-hint');
+  if (hint) hint.style.display = tweaks.theme === 'auto' ? 'block' : 'none';
+  // re-draw chart if we're on result view
+  if (document.getElementById('view-result').classList.contains('on')) {
+    const signEls = document.querySelectorAll('.placement .sign');
+    const sun = signEls[0]?.firstChild?.textContent?.trim();
+    const moon = signEls[1]?.firstChild?.textContent?.trim();
+    const rising = signEls[2]?.firstChild?.textContent?.trim();
+    if (sun && moon && rising) drawWheel({ sun, moon, rising });
+  }
+  paintStars();
+  // update segmented buttons
+  document.querySelectorAll('.seg').forEach(seg => {
+    const key = seg.dataset.tweak;
+    seg.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('on', b.dataset.val === tweaks[key]);
+    });
+  });
+}
+applyTweaks();
+
+function setTweak(k, v) {
+  tweaks[k] = v;
+  applyTweaks();
+  try {
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
+  } catch (e) { /* not in iframe */ }
+}
+
+document.querySelectorAll('.seg').forEach(seg => {
+  seg.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    setTweak(seg.dataset.tweak, e.target.dataset.val);
+  });
+});
+
+// re-evaluate auto theme every 5 minutes and on tab focus
+setInterval(() => { if (tweaks.theme === 'auto') applyTweaks(); }, 5 * 60 * 1000);
+window.addEventListener('focus', () => { if (tweaks.theme === 'auto') applyTweaks(); });
+
+document.getElementById('tweak-demo').addEventListener('click', () => {
+  showDemo();
+});
+
+const tweaksEl = document.getElementById('tweaks');
+function showTweaks(on) {
+  tweaksEl.classList.toggle('on', !!on);
+}
+document.getElementById('tweaks-close').addEventListener('click', () => {
+  showTweaks(false);
+  try { window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*'); } catch (e) {}
+});
+
+window.addEventListener('message', (ev) => {
+  const d = ev.data;
+  if (!d || typeof d !== 'object') return;
+  if (d.type === '__activate_edit_mode') showTweaks(true);
+  if (d.type === '__deactivate_edit_mode') showTweaks(false);
+});
+// Announce availability
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch (e) {}
 </script>
 </body>
 </html>
