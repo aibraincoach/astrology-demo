@@ -76,28 +76,31 @@ function getMoonLongitude(jde) {
 }
 
 function getAscendant(jde, latDeg, lngDeg) {
-  // Local Sidereal Time → Ascendant
-  // GAST in seconds of time
-  const gast = sidereal.apparent(jde); // returns radians
-  // LST in radians
-  const lngRad = lngDeg * Math.PI / 180;
-  const lst = gast + lngRad; // radians
-  // Obliquity of ecliptic (mean, degrees)
+  // sidereal.apparent() returns GAST in seconds of time (0–86400)
+  const gastSec = sidereal.apparent(jde);
+  const gastDeg = gastSec / 3600 * 15; // seconds → degrees (15°/hr)
+  // RAMC = LST in degrees (east longitude positive, west negative)
+  const RAMC = ((gastDeg + lngDeg) % 360 + 360) % 360;
+
   const T = base.J2000Century(jde);
   const eps = (23.439291111 - 0.013004167 * T - 0.0000001639 * T * T + 0.0000005036 * T * T * T) * Math.PI / 180;
   const latRad = latDeg * Math.PI / 180;
-  // Ascendant formula
-  const ascRad = Math.atan2(Math.cos(lst), -(Math.sin(lst) * Math.cos(eps) + Math.tan(latRad) * Math.sin(eps)));
-  let ascDeg = ascRad * 180 / Math.PI;
-  // Normalize to 0–360, then shift quadrant based on LST
-  // atan2 returns -180 to 180; we need to match the correct quadrant
-  const lstDeg = ((lst * 180 / Math.PI) % 360 + 360) % 360;
-  if (lstDeg >= 0 && lstDeg < 180) {
-    ascDeg = (ascDeg + 360) % 360;
-  } else {
-    ascDeg = (ascDeg + 180 + 360) % 360;
-  }
-  return ascDeg;
+  const ramcRad = RAMC * Math.PI / 180;
+
+  // Standard ascendant formula: tan(ASC) = -cos(RAMC) / (sin(RAMC)*cos(eps) + tan(lat)*sin(eps))
+  const numer = -Math.cos(ramcRad);
+  const denom =  Math.sin(ramcRad) * Math.cos(eps) + Math.tan(latRad) * Math.sin(eps);
+  let asc = Math.atan(numer / denom) * 180 / Math.PI;
+  asc = (asc + 360) % 360;
+
+  // Quadrant correction: ASC must lie within 90° of (RAMC + 90°)
+  // i.e. it must be in the eastern rising hemisphere relative to RAMC
+  const target = (RAMC + 90) % 360;
+  let diff = (asc - target + 360) % 360;
+  if (diff > 180) diff -= 360;
+  if (Math.abs(diff) > 90) asc = (asc + 180) % 360;
+
+  return asc;
 }
 
 async function callOpenAI(sun, moon, rising) {
