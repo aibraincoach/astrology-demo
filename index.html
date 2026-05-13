@@ -275,6 +275,7 @@
       cursor: pointer;
     }
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 500px) { .field-row { grid-template-columns: 1fr; } }
 
     /* segmented compound inputs (date / time) */
     .seg-input {
