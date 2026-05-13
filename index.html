@@ -1136,15 +1136,16 @@ function drawWheel({ sun, moon, rising }) {
 /* ────────────────────────────────────────────────────────────────────
    Render the full result
    ──────────────────────────────────────────────────────────────────── */
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 function renderResult(data, meta) {
   document.getElementById('head-name').textContent = data.name || 'A chart, cast';
   document.getElementById('who-line').textContent = data.name ? 'Chart of' : 'Cast on the spot,';
 
-  const fmtDate = (d) => {
-    if (!d) return '—';
-    const [y, m, day] = d.split('-').map(Number);
-    return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  };
   document.getElementById('stamp-date').textContent = fmtDate(meta.birthDate);
   document.getElementById('stamp-time').textContent = meta.birthTime || '—';
   document.getElementById('stamp-loc').textContent  = meta.location || '—';
@@ -1176,12 +1177,12 @@ function renderResult(data, meta) {
     const tag = document.createElement('div'); tag.className = 'tag';
     tag.textContent = sd.tag;
 
-    const meta = document.createElement('div'); meta.className = 'meta';
+    const metaEl = document.createElement('div'); metaEl.className = 'meta';
     const bold = document.createElement('b'); bold.textContent = sd.element;
-    meta.appendChild(bold);
-    meta.appendChild(document.createTextNode(' · ' + sd.modality));
+    metaEl.appendChild(bold);
+    metaEl.appendChild(document.createTextNode(' · ' + sd.modality));
 
-    card.append(bodyGlyph, role, signEl, tag, meta);
+    card.append(bodyGlyph, role, signEl, tag, metaEl);
     pEl.appendChild(card);
   });
 
@@ -1291,6 +1292,7 @@ document.getElementById('demo-link').addEventListener('click', showDemo);
 /* Reset */
 document.getElementById('reset-btn').addEventListener('click', () => {
   document.getElementById('submit-btn').disabled = false;
+  document.getElementById('view-result').classList.remove('reveal');
   document.title = 'Ephemera — your big three';
   showView('intro');
 });
