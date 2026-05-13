@@ -686,6 +686,13 @@
     }
     .demo-btn:hover { background: var(--gold); color: var(--bg); }
 
+    /* ─────────────────────────── utilities ─────────────────────────── */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
     /* ─────────────────────────── motion ─────────────────────────── */
     .fade-in { animation: fade 0.7s ease both; }
     @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -753,8 +760,9 @@
         <input type="text" id="name" placeholder="What shall we call you?" autocomplete="off" />
       </div>
       <div class="field-row">
-        <div class="field">
-          <label>Born on</label>
+        <fieldset class="field" style="border:0;padding:0;min-width:0;">
+          <legend class="sr-only">Date of birth</legend>
+          <label aria-hidden="true">Born on</label>
           <div class="seg-input month-wide">
             <select id="b-month" class="m-pick" aria-label="Month" required>
               <option value="">Month…</option>
@@ -771,12 +779,12 @@
               <option value="11">November</option>
               <option value="12">December</option>
             </select>
-            <span class="div">/</span>
+            <span class="div" aria-hidden="true">/</span>
             <input type="number" id="b-day" class="w-day" placeholder="DD" min="1" max="31" inputmode="numeric" aria-label="Day" required />
-            <span class="div">/</span>
+            <span class="div" aria-hidden="true">/</span>
             <input type="number" id="b-year" class="w-year" placeholder="YYYY" min="1900" max="2100" inputmode="numeric" aria-label="Year" required />
           </div>
-        </div>
+        </fieldset>
         <div class="field">
           <label>at</label>
           <div class="seg-input">
@@ -797,7 +805,7 @@
 
       <button type="submit" class="submit" id="submit-btn">
         <span>Cast my chart</span>
-        <span class="arrow">→</span>
+        <span class="arrow" aria-hidden="true">→</span>
       </button>
 
       <button type="button" class="demo-link" id="demo-link"><span>or read a sample chart →</span></button>
@@ -908,6 +916,8 @@ const SIGN_DATA = {
   Pisces:      { glyph: '♓', element: 'Water', modality: 'Mutable',  tag: 'The Dreamer' },
 };
 const SIGN_ORDER = Object.keys(SIGN_DATA);
+
+let lastChartData = null;
 
 const BODIES = {
   Sun:    { glyph: '☉', role: 'Sun',    desc: 'The radiating self' },
@@ -1177,8 +1187,8 @@ function renderResult(data, meta) {
 
   document.getElementById('analysis-text').textContent = data.analysis;
 
-  window.lastChartData = { sun: data.sun, moon: data.moon, rising: data.rising };
-  drawWheel(window.lastChartData);
+  lastChartData = { sun: data.sun, moon: data.moon, rising: data.rising };
+  drawWheel(lastChartData);
 
   document.title = data.name ? `${data.name}'s chart · Ephemera` : 'Ephemera — your big three';
   document.getElementById('view-result').classList.add('reveal');
@@ -1230,7 +1240,7 @@ form.addEventListener('submit', async (e) => {
     showErr('A date, a time and a city — all three are needed.'); return;
   }
   if (+year < 1900 || +year > 2100) { showErr('That year looks off. Try a four-digit year.'); return; }
-  if (+day < 1 || +day > 31)        { showErr('Day must be 1–31.'); return; }
+  if (new Date(+year, +month - 1, +day).getMonth() !== +month - 1) { showErr('That date doesn\'t exist. Check the day.'); return; }
   if (hour < 1 || hour > 12)        { showErr('Hour must be 1–12.'); return; }
   if (+min < 0 || +min > 59)        { showErr('Minute must be 0–59.'); return; }
 
@@ -1326,17 +1336,18 @@ function effectiveTheme() {
   return (h >= 6 && h < 19) ? 'daybreak' : 'midnight';
 }
 
-function applyTweaks() {
+function applyTweaks(changedKey) {
   document.body.dataset.theme = effectiveTheme();
   document.body.dataset.wheel = tweaks.wheel;
   // hint visibility
   const hint = document.getElementById('auto-hint');
   if (hint) hint.style.display = tweaks.theme === 'auto' ? 'block' : 'none';
   // re-draw chart if we're on result view
-  if (document.getElementById('view-result').classList.contains('on') && window.lastChartData) {
-    drawWheel(window.lastChartData);
+  if (document.getElementById('view-result').classList.contains('on') && lastChartData) {
+    drawWheel(lastChartData);
   }
-  paintStars();
+  // only repaint stars when theme changes (not wheel-mode changes)
+  if (!changedKey || changedKey === 'theme') paintStars();
   // update segmented buttons
   document.querySelectorAll('.seg').forEach(seg => {
     const key = seg.dataset.tweak;
@@ -1349,9 +1360,9 @@ applyTweaks();
 
 function setTweak(k, v) {
   tweaks[k] = v;
-  applyTweaks();
+  applyTweaks(k);
   try {
-    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, window.location.origin);
   } catch (e) { /* not in iframe */ }
 }
 
@@ -1363,8 +1374,8 @@ document.querySelectorAll('.seg').forEach(seg => {
 });
 
 // re-evaluate auto theme every 5 minutes and on tab focus
-setInterval(() => { if (tweaks.theme === 'auto') applyTweaks(); }, 5 * 60 * 1000);
-window.addEventListener('focus', () => { if (tweaks.theme === 'auto') applyTweaks(); });
+setInterval(() => { if (tweaks.theme === 'auto') applyTweaks('theme'); }, 5 * 60 * 1000);
+window.addEventListener('focus', () => { if (tweaks.theme === 'auto') applyTweaks('theme'); });
 
 document.getElementById('tweak-demo').addEventListener('click', () => {
   showDemo();
@@ -1373,10 +1384,15 @@ document.getElementById('tweak-demo').addEventListener('click', () => {
 const tweaksEl = document.getElementById('tweaks');
 function showTweaks(on) {
   tweaksEl.classList.toggle('on', !!on);
+  tweaksEl.setAttribute('aria-hidden', on ? 'false' : 'true');
+  tweaksEl.querySelectorAll('button, select, input, a[href]').forEach(el => {
+    el.tabIndex = on ? 0 : -1;
+  });
 }
+showTweaks(false);
 document.getElementById('tweaks-close').addEventListener('click', () => {
   showTweaks(false);
-  try { window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*'); } catch (e) {}
+  try { window.parent.postMessage({ type: '__edit_mode_dismissed' }, window.location.origin); } catch (e) {}
 });
 
 window.addEventListener('message', (ev) => {
@@ -1387,7 +1403,7 @@ window.addEventListener('message', (ev) => {
   if (d.type === '__deactivate_edit_mode') showTweaks(false);
 });
 // Announce availability
-try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch (e) {}
+try { window.parent.postMessage({ type: '__edit_mode_available' }, window.location.origin); } catch (e) {}
 </script>
 </body>
 </html>
