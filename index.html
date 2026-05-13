@@ -11,6 +11,7 @@
     /* ─────────────────────────── tokens ─────────────────────────── */
     :root {
       /* midnight (default) */
+      --color-scheme: dark;
       --bg:        #0b0a18;
       --bg-2:      #14122a;
       --ink:       #ece4d2;
@@ -30,6 +31,7 @@
     }
 
     [data-theme="daybreak"] {
+      --color-scheme: light;
       --bg:        #f3ecdc;
       --bg-2:      #ece2c9;
       --ink:       #1c1a14;
@@ -124,13 +126,14 @@
     @media (max-width: 640px) { .nav .meta .hide-sm { display: none; } }
 
     /* ─────────────────────────── intro / form ─────────────────────────── */
+    .intro { display: none; }
+    .intro.on { display: grid; }
     .intro {
-      display: grid;
       grid-template-columns: 1.05fr 0.95fr;
       gap: clamp(40px, 6vw, 88px);
       align-items: start;
     }
-    @media (max-width: 880px) { .intro { grid-template-columns: 1fr; gap: 48px; } }
+    @media (max-width: 880px) { .intro.on { grid-template-columns: 1fr; gap: 48px; } }
 
     .pretitle {
       font-family: var(--mono);
@@ -264,10 +267,7 @@
     .field input::placeholder { color: var(--ink-mute); font-style: italic; }
     .field input:focus { border-bottom-color: var(--gold); }
     .field input[type="date"], .field input[type="time"] {
-      color-scheme: dark;
-    }
-    [data-theme="daybreak"] .field input[type="date"], [data-theme="daybreak"] .field input[type="time"] {
-      color-scheme: light;
+      color-scheme: var(--color-scheme);
     }
     .field input[type="date"]::-webkit-calendar-picker-indicator,
     .field input[type="time"]::-webkit-calendar-picker-indicator {
@@ -960,13 +960,8 @@ paintStars();
    ──────────────────────────────────────────────────────────────────── */
 function showView(name) {
   ['intro','loading','result'].forEach(v => {
-    const el = document.getElementById('view-' + v);
-    el.classList.toggle('on', v === name);
-    if (v !== 'loading') el.style.display = v === name ? '' : 'none';
+    document.getElementById('view-' + v).classList.toggle('on', v === name);
   });
-  // loading uses flex; manage separately
-  const loading = document.getElementById('view-loading');
-  loading.style.display = name === 'loading' ? 'flex' : 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 showView('intro');
@@ -1299,17 +1294,20 @@ document.getElementById('save-btn').addEventListener('click', () => {
 (function stampNow() {
   const el = document.getElementById('now-stamp');
   if (!el) return;
-  const d = new Date();
-  el.textContent = d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+  const update = () => {
+    el.textContent = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+  };
+  update();
+  setInterval(update, 60000);
 })();
 
 /* ────────────────────────────────────────────────────────────────────
    Tweaks panel — vanilla, follows the host protocol
    ──────────────────────────────────────────────────────────────────── */
-const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "theme": "auto",
-  "wheel": "classic"
-}/*EDITMODE-END*/;
+const TWEAK_DEFAULTS = {
+  theme: 'auto',
+  wheel: 'classic',
+};
 
 let tweaks = { ...TWEAK_DEFAULTS };
 
@@ -1373,6 +1371,7 @@ document.getElementById('tweaks-close').addEventListener('click', () => {
 });
 
 window.addEventListener('message', (ev) => {
+  if (ev.origin !== 'https://astrology-demo-rho.vercel.app') return;
   const d = ev.data;
   if (!d || typeof d !== 'object') return;
   if (d.type === '__activate_edit_mode') showTweaks(true);
