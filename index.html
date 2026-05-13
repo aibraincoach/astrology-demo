@@ -370,6 +370,7 @@
       text-transform: uppercase;
       display: none;
     }
+    .error.visible { display: block; }
 
     /* ─────────────────────────── loading ─────────────────────────── */
     .loading {
@@ -702,7 +703,7 @@
     @keyframes rev { to { opacity: 1; transform: none; } }
   </style>
 </head>
-<body data-theme="midnight" data-wheel="classic">
+<body>
 
 <div class="stars"><canvas id="stars-canvas"></canvas></div>
 
@@ -755,7 +756,7 @@
         <div class="field">
           <label>Born on</label>
           <div class="seg-input month-wide">
-            <select id="b-month" class="m-pick" required>
+            <select id="b-month" class="m-pick" aria-label="Month" required>
               <option value="">Month…</option>
               <option value="1">January</option>
               <option value="2">February</option>
@@ -771,9 +772,9 @@
               <option value="12">December</option>
             </select>
             <span class="div">/</span>
-            <input type="number" id="b-day" class="w-day" placeholder="DD" min="1" max="31" inputmode="numeric" required />
+            <input type="number" id="b-day" class="w-day" placeholder="DD" min="1" max="31" inputmode="numeric" aria-label="Day" required />
             <span class="div">/</span>
-            <input type="number" id="b-year" class="w-year" placeholder="YYYY" min="1900" max="2100" inputmode="numeric" required />
+            <input type="number" id="b-year" class="w-year" placeholder="YYYY" min="1900" max="2100" inputmode="numeric" aria-label="Year" required />
           </div>
         </div>
         <div class="field">
@@ -782,7 +783,7 @@
             <input type="number" id="b-hour" class="w-2" placeholder="HH" min="1" max="12" inputmode="numeric" required />
             <span class="div">:</span>
             <input type="number" id="b-min" class="w-2" placeholder="MM" min="0" max="59" inputmode="numeric" required />
-            <select id="b-ampm" required>
+            <select id="b-ampm" aria-label="AM or PM" required>
               <option value="AM">AM</option>
               <option value="PM">PM</option>
             </select>
@@ -801,7 +802,7 @@
 
       <button type="button" class="demo-link" id="demo-link"><span>or read a sample chart →</span></button>
 
-      <div class="error" id="error-msg"></div>
+      <div class="error" id="error-msg" role="alert"></div>
     </form>
   </section>
 
@@ -917,6 +918,8 @@ const BODIES = {
 /* ────────────────────────────────────────────────────────────────────
    Starfield — small dots painted to canvas
    ──────────────────────────────────────────────────────────────────── */
+const PIXELS_PER_STAR = 4500; // roughly one star per N pixels of canvas area
+
 function paintStars() {
   const c = document.getElementById('stars-canvas');
   if (!c) return;
@@ -929,7 +932,7 @@ function paintStars() {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, w, h);
   const isLight = document.body.dataset.theme === 'daybreak';
-  const count = Math.floor((w * h) / 4500);
+  const count = Math.floor((w * h) / PIXELS_PER_STAR);
   for (let i = 0; i < count; i++) {
     const x = Math.random() * w;
     const y = Math.random() * h;
@@ -1213,17 +1216,17 @@ form.addEventListener('submit', async (e) => {
   const location = document.getElementById('location').value.trim();
 
   const errEl = document.getElementById('error-msg');
-  errEl.style.display = 'none';
+  const showErr = (msg) => { errEl.textContent = msg; errEl.classList.add('visible'); };
+  errEl.classList.remove('visible');
 
   // validation
   if (!month || !day || !year || !document.getElementById('b-hour').value || min === '' || !location) {
-    errEl.textContent = 'A date, a time and a city — all three are needed.';
-    errEl.style.display = 'block'; return;
+    showErr('A date, a time and a city — all three are needed.'); return;
   }
-  if (+year < 1900 || +year > 2100) { errEl.textContent = 'That year looks off. Try a four-digit year.'; errEl.style.display='block'; return; }
-  if (+day < 1 || +day > 31)         { errEl.textContent = 'Day must be 1–31.'; errEl.style.display='block'; return; }
-  if (hour < 1 || hour > 12)         { errEl.textContent = 'Hour must be 1–12.'; errEl.style.display='block'; return; }
-  if (+min < 0 || +min > 59)         { errEl.textContent = 'Minute must be 0–59.'; errEl.style.display='block'; return; }
+  if (+year < 1900 || +year > 2100) { showErr('That year looks off. Try a four-digit year.'); return; }
+  if (+day < 1 || +day > 31)        { showErr('Day must be 1–31.'); return; }
+  if (hour < 1 || hour > 12)        { showErr('Hour must be 1–12.'); return; }
+  if (+min < 0 || +min > 59)        { showErr('Minute must be 0–59.'); return; }
 
   // convert 12-hour AM/PM to 24-hour
   if (ampm === 'AM' && hour === 12) hour = 0;
@@ -1252,8 +1255,7 @@ form.addEventListener('submit', async (e) => {
     stopLoading();
     showView('intro');
     btn.disabled = false;
-    errEl.textContent = err.message;
-    errEl.style.display = 'block';
+    showErr(err.message);
   }
 });
 
@@ -1371,7 +1373,7 @@ document.getElementById('tweaks-close').addEventListener('click', () => {
 });
 
 window.addEventListener('message', (ev) => {
-  if (ev.origin !== 'https://astrology-demo-rho.vercel.app') return;
+  if (ev.origin !== window.location.origin) return;
   const d = ev.data;
   if (!d || typeof d !== 'object') return;
   if (d.type === '__activate_edit_mode') showTweaks(true);
