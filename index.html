@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Big Three</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d1a;
+      --surface: #16162a;
+      --border: #2a2a4a;
+      --accent: #a78bfa;
+      --accent2: #818cf8;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --sun: #fbbf24;
+      --moon: #818cf8;
+      --rising: #34d399;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: var(--muted);
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      color: var(--text);
+      padding: 0.65rem 0.85rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: #4a4a6a; }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.6);
+      cursor: pointer;
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    button {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.85rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Loading */
+    #loading {
+      display: none;
+      text-align: center;
+      padding: 2rem 0 1rem;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Results */
+    #results { display: none; width: 100%; max-width: 480px; margin-top: 1.5rem; }
+
+    .signs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .sign-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1rem 0.75rem;
+      text-align: center;
+    }
+
+    .sign-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+
+    .sign-label.sun { color: var(--sun); }
+    .sign-label.moon { color: var(--moon); }
+    .sign-label.rising { color: var(--rising); }
+
+    .sign-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .sign-name { font-size: 0.95rem; font-weight: 600; }
+
+    .analysis-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.5rem;
+    }
+
+    .analysis-card h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.85rem;
+    }
+
+    .analysis-card p {
+      line-height: 1.75;
+      color: var(--text);
+      font-size: 0.975rem;
+    }
+
+    .reset-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 0.5rem;
+      padding: 0.65rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .error-msg {
+      background: #2d1b1b;
+      border: 1px solid #7f1d1d;
+      color: #fca5a5;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    #name-display {
+      text-align: center;
+      margin-bottom: 1.25rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Your Big Three</h1>
+  <p>Sun · Moon · Rising — synthesized by AI</p>
+</header>
+
+<div class="card" id="form-card">
+  <div class="form-group">
+    <label for="name">Your name (optional)</label>
+    <input type="text" id="name" placeholder="e.g. Alex" autocomplete="off" />
+  </div>
+  <div class="row">
+    <div class="form-group">
+      <label for="birthDate">Birth date</label>
+      <input type="date" id="birthDate" required />
+    </div>
+    <div class="form-group">
+      <label for="birthTime">Birth time</label>
+      <input type="time" id="birthTime" required />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="location">Birth city</label>
+    <input type="text" id="location" placeholder="e.g. Tokyo, Japan" autocomplete="off" required />
+  </div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p id="loading-msg">Calculating your chart…</p>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <button id="submit-btn" onclick="submitChart()">Calculate My Chart</button>
+</div>
+
+<div id="results">
+  <div id="name-display"></div>
+  <div class="signs-grid">
+    <div class="sign-card">
+      <div class="sign-label sun">Sun</div>
+      <div class="sign-icon">☀️</div>
+      <div class="sign-name" id="sun-sign">—</div>
+    </div>
+    <div class="sign-card">
+      <div class="sign-label moon">Moon</div>
+      <div class="sign-icon">🌙</div>
+      <div class="sign-name" id="moon-sign">—</div>
+    </div>
+    <div class="sign-card">
+      <div class="sign-label rising">Rising</div>
+      <div class="sign-icon">⬆️</div>
+      <div class="sign-name" id="rising-sign">—</div>
+    </div>
+  </div>
+  <div class="analysis-card">
+    <h3>Your Synthesis</h3>
+    <p id="analysis-text"></p>
+  </div>
+  <button class="reset-btn" onclick="resetForm()">← Start over</button>
+</div>
+
+<script>
+  const loadingMessages = [
+    'Locating your birthplace…',
+    'Calculating your chart…',
+    'Reading the stars…',
+    'Synthesizing your personality…',
+  ];
+
+  let loadingInterval;
+
+  function startLoadingMessages() {
+    let i = 0;
+    document.getElementById('loading-msg').textContent = loadingMessages[0];
+    loadingInterval = setInterval(() => {
+      i = (i + 1) % loadingMessages.length;
+      document.getElementById('loading-msg').textContent = loadingMessages[i];
+    }, 2200);
+  }
+
+  function stopLoadingMessages() {
+    clearInterval(loadingInterval);
+  }
+
+  async function submitChart() {
+    const name = document.getElementById('name').value.trim();
+    const birthDate = document.getElementById('birthDate').value;
+    const birthTime = document.getElementById('birthTime').value;
+    const location = document.getElementById('location').value.trim();
+
+    const errEl = document.getElementById('error-msg');
+    errEl.style.display = 'none';
+
+    if (!birthDate || !birthTime || !location) {
+      errEl.textContent = 'Please fill in birth date, time, and city.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    const loading = document.getElementById('loading');
+    btn.disabled = true;
+    loading.style.display = 'block';
+    startLoadingMessages();
+
+    try {
+      const res = await fetch('/api/chart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, birthDate, birthTime, location }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong. Please try again.');
+      }
+
+      stopLoadingMessages();
+      loading.style.display = 'none';
+      document.getElementById('form-card').style.display = 'none';
+
+      document.getElementById('sun-sign').textContent = data.sun;
+      document.getElementById('moon-sign').textContent = data.moon;
+      document.getElementById('rising-sign').textContent = data.rising;
+      document.getElementById('analysis-text').textContent = data.analysis;
+
+      const nameDisplay = document.getElementById('name-display');
+      if (data.name) {
+        nameDisplay.textContent = data.name + ''s Chart';
+        nameDisplay.style.display = 'block';
+      } else {
+        nameDisplay.style.display = 'none';
+      }
+
+      document.getElementById('results').style.display = 'block';
+    } catch (err) {
+      stopLoadingMessages();
+      loading.style.display = 'none';
+      btn.disabled = false;
+      errEl.textContent = err.message;
+      errEl.style.display = 'block';
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('form-card').style.display = 'block';
+    document.getElementById('submit-btn').disabled = false;
+  }
+</script>
+</body>
+</html>
