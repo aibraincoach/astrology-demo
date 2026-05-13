@@ -773,7 +773,7 @@
             <span class="div">/</span>
             <input type="number" id="b-day" class="w-day" placeholder="DD" min="1" max="31" inputmode="numeric" required />
             <span class="div">/</span>
-            <input type="number" id="b-year" class="w-year" placeholder="YYYY" min="1900" max="2030" inputmode="numeric" required />
+            <input type="number" id="b-year" class="w-year" placeholder="YYYY" min="1900" max="2100" inputmode="numeric" required />
           </div>
         </div>
         <div class="field">
@@ -1143,21 +1143,39 @@ function renderResult(data, meta) {
   ];
 
   const pEl = document.getElementById('placements');
-  pEl.innerHTML = placements.map(p => {
+  pEl.innerHTML = '';
+  placements.forEach(p => {
     const sd = SIGN_DATA[p.sign] || { glyph: '?', element: '—', modality: '—', tag: '' };
-    return `
-      <div class="placement">
-        <div class="body-glyph">${BODIES[p.key].glyph}</div>
-        <div class="role">${BODIES[p.key].role} in</div>
-        <div class="sign">${p.sign}<span class="zg">${sd.glyph}</span></div>
-        <div class="tag">${sd.tag}</div>
-        <div class="meta"><b>${sd.element}</b> · ${sd.modality}</div>
-      </div>`;
-  }).join('');
+    const card = document.createElement('div'); card.className = 'placement';
+
+    const bodyGlyph = document.createElement('div'); bodyGlyph.className = 'body-glyph';
+    bodyGlyph.textContent = BODIES[p.key].glyph;
+
+    const role = document.createElement('div'); role.className = 'role';
+    role.textContent = BODIES[p.key].role + ' in';
+
+    const signEl = document.createElement('div'); signEl.className = 'sign';
+    signEl.textContent = p.sign;
+    const zg = document.createElement('span'); zg.className = 'zg';
+    zg.textContent = sd.glyph;
+    signEl.appendChild(zg);
+
+    const tag = document.createElement('div'); tag.className = 'tag';
+    tag.textContent = sd.tag;
+
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const bold = document.createElement('b'); bold.textContent = sd.element;
+    meta.appendChild(bold);
+    meta.appendChild(document.createTextNode(' · ' + sd.modality));
+
+    card.append(bodyGlyph, role, signEl, tag, meta);
+    pEl.appendChild(card);
+  });
 
   document.getElementById('analysis-text').textContent = data.analysis;
 
-  drawWheel({ sun: data.sun, moon: data.moon, rising: data.rising });
+  window.lastChartData = { sun: data.sun, moon: data.moon, rising: data.rising };
+  drawWheel(window.lastChartData);
 
   document.getElementById('view-result').classList.add('reveal');
   showView('result');
@@ -1172,10 +1190,7 @@ function wireAdvance(fromId, toId, max) {
   if (!from || !to) return;
   from.addEventListener('input', () => {
     const v = from.value;
-    if (v.length >= 2 || Number(v) > Math.floor(max / 10)) {
-      // jump when the value can't sensibly grow further
-      if (v.length >= 2) to.focus();
-    }
+    if (v.length >= 2 || Number(v) > Math.floor(max / 10)) to.focus();
   });
 }
 wireAdvance('b-day', 'b-year', 31);
@@ -1210,7 +1225,7 @@ form.addEventListener('submit', async (e) => {
     errEl.textContent = 'A date, a time and a city — all three are needed.';
     errEl.style.display = 'block'; return;
   }
-  if (+year < 1900 || +year > 2030) { errEl.textContent = 'That year looks off. Try a four-digit year.'; errEl.style.display='block'; return; }
+  if (+year < 1900 || +year > 2100) { errEl.textContent = 'That year looks off. Try a four-digit year.'; errEl.style.display='block'; return; }
   if (+day < 1 || +day > 31)         { errEl.textContent = 'Day must be 1–31.'; errEl.style.display='block'; return; }
   if (hour < 1 || hour > 12)         { errEl.textContent = 'Hour must be 1–12.'; errEl.style.display='block'; return; }
   if (+min < 0 || +min > 59)         { errEl.textContent = 'Minute must be 0–59.'; errEl.style.display='block'; return; }
@@ -1311,12 +1326,8 @@ function applyTweaks() {
   const hint = document.getElementById('auto-hint');
   if (hint) hint.style.display = tweaks.theme === 'auto' ? 'block' : 'none';
   // re-draw chart if we're on result view
-  if (document.getElementById('view-result').classList.contains('on')) {
-    const signEls = document.querySelectorAll('.placement .sign');
-    const sun = signEls[0]?.firstChild?.textContent?.trim();
-    const moon = signEls[1]?.firstChild?.textContent?.trim();
-    const rising = signEls[2]?.firstChild?.textContent?.trim();
-    if (sun && moon && rising) drawWheel({ sun, moon, rising });
+  if (document.getElementById('view-result').classList.contains('on') && window.lastChartData) {
+    drawWheel(window.lastChartData);
   }
   paintStars();
   // update segmented buttons
