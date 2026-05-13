@@ -42,6 +42,11 @@ const gastSec = sidereal.apparent(jde);
 const gastDeg = gastSec / 3600 * 15;
 const RAMC = ((gastDeg + lngDeg) % 360 + 360) % 360;
 
+const T = base.J2000Century(jde);
+const eps = (23.439291111 - 0.013004167 * T - 0.0000001639 * T * T + 0.0000005036 * T * T * T) * Math.PI / 180;
+const latRad = latDeg * Math.PI / 180;
+const ramcRad = RAMC * Math.PI / 180;
+
 // Standard ascendant formula
 const numer = -Math.cos(ramcRad);
 const denom = Math.sin(ramcRad) * Math.cos(eps) + Math.tan(latRad) * Math.sin(eps);
@@ -69,18 +74,18 @@ Jan 23 1987, 9:05 AM, Calgary → Sun Aquarius, Moon Scorpio, Rising Aquarius. M
 The frontend stopped working entirely. The "Cast my chart" button did nothing. No console error was immediately obvious because the script failed during parse, before any code ran.
 
 ### Root cause
-A curly right single quotation mark (`\u2019`) was used inside a single-quoted JavaScript string:
+A literal curly right single quotation mark (`'`, U+2019) was typed directly into a single-quoted JavaScript string:
 ```javascript
-// BROKEN — curly quote inside single quotes
-analysis: '...fall asleep in baths, and read the unsaid sentence in a friend\u2019s pause...'
+// BROKEN — literal curly quote inside single quotes
+analysis: '...fall asleep in baths, and read the unsaid sentence in a friend’s pause...'
 ```
-This caused a `SyntaxError` on parse. The entire `<script>` block died, so `submitChart` (and every other function) was never defined.
+The parser saw the literal `'` as the closing quote, leaving the rest of the line as invalid syntax. This caused a `SyntaxError` on parse. The entire `<script>` block died, so `submitChart` (and every other function) was never defined.
 
 ### Exact fix
-Switched to double-quoted strings for any text containing contractions:
+Replaced the literal curly quote with its Unicode escape sequence (`\u2019`) inside the same single-quoted string:
 ```javascript
-// FIXED
-analysis: "...fall asleep in baths, and read the unsaid sentence in a friend\u2019s pause..."
+// FIXED — escape sequence avoids the parser collision
+analysis: '...fall asleep in baths, and read the unsaid sentence in a friend\u2019s pause...'
 ```
 
 **Lesson:** Never use curly quotes inside single-quoted JS strings. Prefer double quotes for user-facing copy, or use template literals.
