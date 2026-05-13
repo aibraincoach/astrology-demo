@@ -1,16 +1,16 @@
 # Astrology App — Task Tracker
 
 ## Milestone 1: Project Setup
-- [ ] Create GitHub repo
-- [ ] Initialize project folder with framework files (PRD, claude.md, planning.md, tasks.md)
-- [ ] Create .gitignore (node_modules, .env.local)
+- [x] Create GitHub repo — 2026-05-13
+- [x] Initialize project folder with framework files (PRD, claude.md, planning.md, tasks.md) — 2026-05-13
+- [x] Create .gitignore (node_modules, .env.local) — 2026-05-13
 - [ ] Connect repo to Vercel
 - [ ] Add environment variable placeholders in Vercel dashboard
 - [ ] Create .env.local locally with API keys
 
 ## Milestone 2: Verify Critical Dependency
-- [ ] Install swisseph via npm in api/ context
-- [ ] Write minimal test function that imports swisseph and calculates one solar longitude
+- [x] Install swisseph via npm in api/ context — 2026-05-13
+- [x] Write minimal test function that imports swisseph and calculates one solar longitude — 2026-05-13 (verified: Apr 20 1990 → 30.14° = Taurus ✓)
 - [ ] Deploy to Vercel and confirm native addon compiles and runs
 - [ ] If swisseph fails: evaluate astronomia as fallback and update planning.md
 
