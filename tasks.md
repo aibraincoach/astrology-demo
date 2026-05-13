@@ -11,8 +11,8 @@
 ## Milestone 2: Verify Critical Dependency
 - [x] Install swisseph via npm in api/ context — 2026-05-13
 - [x] Write minimal test function that imports swisseph and calculates one solar longitude — 2026-05-13 (verified: Apr 20 1990 → 30.14° = Taurus ✓)
-- [ ] Deploy to Vercel and confirm native addon compiles and runs (pending this push)
-- [ ] If swisseph fails: evaluate astronomia as fallback and update planning.md
+- [x] Deploy to Vercel and confirm native addon compiles and runs — 2026-05-13 (FAILED: node-gyp/distutils incompatible with Node 24 + Python 3.12 on Vercel)
+- [x] If swisseph fails: evaluate astronomia as fallback and update planning.md — 2026-05-13 (switched to astronomia, verified Sun sign matches swisseph output)
 
 ## Milestone 3: Geocoding and Timezone
 - [x] Sign up for OpenCage API, get key — 2026-05-13 (user provided)

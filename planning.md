@@ -9,7 +9,7 @@ A clean, fast, stateless astrology web app. User enters birth data, gets their B
 | Frontend | Vanilla HTML/CSS/JS, single file |
 | Deployment | Vercel (GitHub CI/CD) |
 | Backend | Vercel serverless function (Node.js) |
-| Ephemeris | swisseph (npm) |
+| Ephemeris | astronomia (pure JS — swisseph failed on Vercel due to node-gyp/distutils incompatibility with Node 24 + Python 3.12) |
 | Geocoding | OpenCage API (free tier) or Nominatim |
 | Timezone | timezonedb API (free tier) |
 | AI Synthesis | OpenAI API — gpt-4o-mini |

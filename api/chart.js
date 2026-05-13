@@ -1,4 +1,4 @@
-const swisseph = require('swisseph');
+const { solar, moonposition, sidereal, base, julian } = require('astronomia');
 const https = require('https');
 
 const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
@@ -9,7 +9,8 @@ function signFromLongitude(lon) {
 
 function httpsGet(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
+    const lib = url.startsWith('https') ? https : require('http');
+    lib.get(url, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -23,7 +24,10 @@ function httpsGet(url) {
 function httpsPost(hostname, path, body, headers) {
   return new Promise((resolve, reject) => {
     const bodyStr = JSON.stringify(body);
-    const req = https.request({ hostname, path, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bodyStr), ...headers } }, (res) => {
+    const req = https.request({
+      hostname, path, method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bodyStr), ...headers }
+    }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -54,26 +58,46 @@ async function getTimezoneOffset(lat, lng, unixTimestamp) {
   return data.gmtOffset; // seconds offset from UTC
 }
 
-function toJulianDay(year, month, day, hourDecimalUT) {
-  return swisseph.swe_julday(year, month, day, hourDecimalUT, swisseph.SE_GREG_CAL);
+function toJD(year, month, day, hourUT) {
+  // Julian Day Number using julian module
+  const jde = julian.CalendarGregorianToJD(year, month, day + hourUT / 24);
+  return jde;
 }
 
-function calcPlanet(jd, planet) {
-  return new Promise((resolve, reject) => {
-    swisseph.swe_calc_ut(jd, planet, swisseph.SEFLG_SPEED, (result) => {
-      if (result.error) reject(new Error(result.error));
-      else resolve(result.longitude);
-    });
-  });
+function getSunLongitude(jde) {
+  // solar.apparentLongitude returns degrees
+  return solar.apparentLongitude(base.J2000Century(jde)) * 180 / Math.PI;
 }
 
-function calcAscendant(jd, lat, lng) {
-  return new Promise((resolve, reject) => {
-    swisseph.swe_houses(jd, lat, lng, 'P', (result) => {
-      if (result.error) reject(new Error(result.error));
-      else resolve(result.ascendant);
-    });
-  });
+function getMoonLongitude(jde) {
+  const pos = moonposition.position(jde);
+  // pos.lon is in radians
+  return pos.lon * 180 / Math.PI;
+}
+
+function getAscendant(jde, latDeg, lngDeg) {
+  // Local Sidereal Time → Ascendant
+  // GAST in seconds of time
+  const gast = sidereal.apparent(jde); // returns radians
+  // LST in radians
+  const lngRad = lngDeg * Math.PI / 180;
+  const lst = gast + lngRad; // radians
+  // Obliquity of ecliptic (mean, degrees)
+  const T = base.J2000Century(jde);
+  const eps = (23.439291111 - 0.013004167 * T - 0.0000001639 * T * T + 0.0000005036 * T * T * T) * Math.PI / 180;
+  const latRad = latDeg * Math.PI / 180;
+  // Ascendant formula
+  const ascRad = Math.atan2(Math.cos(lst), -(Math.sin(lst) * Math.cos(eps) + Math.tan(latRad) * Math.sin(eps)));
+  let ascDeg = ascRad * 180 / Math.PI;
+  // Normalize to 0–360, then shift quadrant based on LST
+  // atan2 returns -180 to 180; we need to match the correct quadrant
+  const lstDeg = ((lst * 180 / Math.PI) % 360 + 360) % 360;
+  if (lstDeg >= 0 && lstDeg < 180) {
+    ascDeg = (ascDeg + 360) % 360;
+  } else {
+    ascDeg = (ascDeg + 180 + 360) % 360;
+  }
+  return ascDeg;
 }
 
 async function callOpenAI(sun, moon, rising) {
@@ -110,48 +134,37 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 1. Geocode
     const { lat, lng } = await geocode(location);
 
-    // 2. Parse birth datetime and get unix timestamp (assume local time, resolve tz)
     const [year, month, day] = birthDate.split('-').map(Number);
     const [hour, minute] = birthTime.split(':').map(Number);
-    // Approximate unix timestamp using UTC to look up timezone
     const approxUtc = Date.UTC(year, month - 1, day, hour, minute) / 1000;
     const gmtOffsetSeconds = await getTimezoneOffset(lat, lng, approxUtc);
 
-    // 3. Convert local birth time to UTC decimal hour
+    // Convert local time to UT
     const localDecimalHour = hour + minute / 60;
-    const utcDecimalHour = localDecimalHour - gmtOffsetSeconds / 3600;
-
-    // Handle day rollover
-    let utcDay = day, utcMonth = month, utcYear = year;
-    let adjustedHour = utcDecimalHour;
-    if (adjustedHour < 0) {
-      adjustedHour += 24;
+    let utHour = localDecimalHour - gmtOffsetSeconds / 3600;
+    let utDay = day, utMonth = month, utYear = year;
+    if (utHour < 0) {
+      utHour += 24;
       const d = new Date(Date.UTC(year, month - 1, day - 1));
-      utcDay = d.getUTCDate(); utcMonth = d.getUTCMonth() + 1; utcYear = d.getUTCFullYear();
-    } else if (adjustedHour >= 24) {
-      adjustedHour -= 24;
+      utDay = d.getUTCDate(); utMonth = d.getUTCMonth() + 1; utYear = d.getUTCFullYear();
+    } else if (utHour >= 24) {
+      utHour -= 24;
       const d = new Date(Date.UTC(year, month - 1, day + 1));
-      utcDay = d.getUTCDate(); utcMonth = d.getUTCMonth() + 1; utcYear = d.getUTCFullYear();
+      utDay = d.getUTCDate(); utMonth = d.getUTCMonth() + 1; utYear = d.getUTCFullYear();
     }
 
-    // 4. Julian Day
-    const jd = toJulianDay(utcYear, utcMonth, utcDay, adjustedHour);
+    const jde = toJD(utYear, utMonth, utDay, utHour);
 
-    // 5. Calculate signs
-    const [sunLon, moonLon, ascLon] = await Promise.all([
-      calcPlanet(jd, swisseph.SE_SUN),
-      calcPlanet(jd, swisseph.SE_MOON),
-      calcAscendant(jd, lat, lng),
-    ]);
+    const sunLon = getSunLongitude(jde);
+    const moonLon = getMoonLongitude(jde);
+    const ascLon = getAscendant(jde, lat, lng);
 
     const sun = signFromLongitude(sunLon);
     const moon = signFromLongitude(moonLon);
     const rising = signFromLongitude(ascLon);
 
-    // 6. AI synthesis
     const analysis = await callOpenAI(sun, moon, rising);
 
     return res.status(200).json({ sun, moon, rising, analysis, name: name || '' });

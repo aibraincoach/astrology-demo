@@ -18,6 +18,6 @@
   },
   "homepage": "https://github.com/aibraincoach/astrology-demo#readme",
   "dependencies": {
-    "swisseph": "^0.5.17"
+    "astronomia": "^4.2.0"
   }
 }
