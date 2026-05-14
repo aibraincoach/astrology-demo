@@ -326,6 +326,17 @@
     .seg-input select option { background: var(--bg-2); color: var(--ink); }
     .seg-input.month-wide { flex-wrap: nowrap; }
     .seg-input .m-pick { min-width: 130px; flex: 0 1 auto; }
+    @media (max-width: 400px) {
+      .seg-input { flex-wrap: wrap; gap: 2px; }
+      .seg-input input,
+      .seg-input select,
+      .seg-input > .div { font-size: 18px; padding-top: 6px; padding-bottom: 6px; }
+      .seg-input .w-day { width: 48px; }
+      .seg-input .w-year { width: 68px; }
+      .seg-input .w-2 { width: 44px; }
+      .seg-input .m-pick { min-width: 100px; flex: 1 1 auto; }
+      .seg-input select { padding-right: 18px; background-position: right 4px center; }
+    }
 
     .submit {
       width: 100%;
