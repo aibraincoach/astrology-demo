@@ -126,14 +126,13 @@
     @media (max-width: 640px) { .nav .meta .hide-sm { display: none; } }
 
     /* ─────────────────────────── intro / form ─────────────────────────── */
-    .intro { display: none; }
-    .intro.on { display: grid; }
     .intro {
+      display: grid;
       grid-template-columns: 1.05fr 0.95fr;
       gap: clamp(40px, 6vw, 88px);
       align-items: start;
     }
-    @media (max-width: 880px) { .intro.on { grid-template-columns: 1fr; gap: 48px; } }
+    @media (max-width: 880px) { .intro { grid-template-columns: 1fr; gap: 48px; } }
 
     .pretitle {
       font-family: var(--mono);
@@ -710,7 +709,7 @@
     @keyframes rev { to { opacity: 1; transform: none; } }
   </style>
 </head>
-<body>
+<body data-theme="midnight" data-wheel="classic">
 
 <div class="stars"><canvas id="stars-canvas"></canvas></div>
 
@@ -782,7 +781,7 @@
             <span class="div" aria-hidden="true">/</span>
             <input type="number" id="b-day" class="w-day" placeholder="DD" min="1" max="31" inputmode="numeric" aria-label="Day" required />
             <span class="div" aria-hidden="true">/</span>
-            <input type="number" id="b-year" class="w-year" placeholder="YYYY" min="1900" max="2100" inputmode="numeric" aria-label="Year" required />
+            <input type="number" id="b-year" class="w-year" placeholder="YYYY" min="1900" max="2030" inputmode="numeric" aria-label="Year" required />
           </div>
         </fieldset>
         <div class="field">
@@ -977,8 +976,13 @@ paintStars();
    ──────────────────────────────────────────────────────────────────── */
 function showView(name) {
   ['intro','loading','result'].forEach(v => {
-    document.getElementById('view-' + v).classList.toggle('on', v === name);
+    const el = document.getElementById('view-' + v);
+    el.classList.toggle('on', v === name);
+    if (v !== 'loading') el.style.display = v === name ? '' : 'none';
   });
+  // loading uses flex; manage separately
+  const loading = document.getElementById('view-loading');
+  loading.style.display = name === 'loading' ? 'flex' : 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 showView('intro');
@@ -1157,34 +1161,17 @@ function renderResult(data, meta) {
   ];
 
   const pEl = document.getElementById('placements');
-  pEl.innerHTML = '';
-  placements.forEach(p => {
+  pEl.innerHTML = placements.map(p => {
     const sd = SIGN_DATA[p.sign] || { glyph: '?', element: '—', modality: '—', tag: '' };
-    const card = document.createElement('div'); card.className = 'placement';
-
-    const bodyGlyph = document.createElement('div'); bodyGlyph.className = 'body-glyph';
-    bodyGlyph.textContent = BODIES[p.key].glyph;
-
-    const role = document.createElement('div'); role.className = 'role';
-    role.textContent = BODIES[p.key].role + ' in';
-
-    const signEl = document.createElement('div'); signEl.className = 'sign';
-    signEl.textContent = p.sign;
-    const zg = document.createElement('span'); zg.className = 'zg';
-    zg.textContent = sd.glyph;
-    signEl.appendChild(zg);
-
-    const tag = document.createElement('div'); tag.className = 'tag';
-    tag.textContent = sd.tag;
-
-    const metaEl = document.createElement('div'); metaEl.className = 'meta';
-    const bold = document.createElement('b'); bold.textContent = sd.element;
-    metaEl.appendChild(bold);
-    metaEl.appendChild(document.createTextNode(' · ' + sd.modality));
-
-    card.append(bodyGlyph, role, signEl, tag, metaEl);
-    pEl.appendChild(card);
-  });
+    return `
+      <div class="placement">
+        <div class="body-glyph">${BODIES[p.key].glyph}</div>
+        <div class="role">${BODIES[p.key].role} in</div>
+        <div class="sign">${p.sign}<span class="zg">${sd.glyph}</span></div>
+        <div class="tag">${sd.tag}</div>
+        <div class="meta"><b>${sd.element}</b> · ${sd.modality}</div>
+      </div>`;
+  }).join('');
 
   document.getElementById('analysis-text').textContent = data.analysis;
 
@@ -1240,8 +1227,8 @@ form.addEventListener('submit', async (e) => {
   if (!month || !day || !year || !document.getElementById('b-hour').value || min === '' || !location) {
     showErr('A date, a time and a city — all three are needed.'); return;
   }
-  if (+year < 1900 || +year > 2100) { showErr('That year looks off. Try a four-digit year.'); return; }
-  if (new Date(+year, +month - 1, +day).getMonth() !== +month - 1) { showErr('That date doesn\'t exist. Check the day.'); return; }
+  if (+year < 1900 || +year > 2030) { showErr('That year looks off. Try a four-digit year.'); return; }
+  if (+day < 1 || +day > 31)         { showErr('Day must be 1–31.'); return; }
   if (hour < 1 || hour > 12)        { showErr('Hour must be 1–12.'); return; }
   if (+min < 0 || +min > 59)        { showErr('Minute must be 0–59.'); return; }
 
@@ -1325,10 +1312,10 @@ document.getElementById('save-btn').addEventListener('click', () => {
 /* ────────────────────────────────────────────────────────────────────
    Tweaks panel — vanilla, follows the host protocol
    ──────────────────────────────────────────────────────────────────── */
-const TWEAK_DEFAULTS = {
-  theme: 'auto',
-  wheel: 'classic',
-};
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "auto",
+  "wheel": "classic"
+}/*EDITMODE-END*/;
 
 let tweaks = { ...TWEAK_DEFAULTS };
 
