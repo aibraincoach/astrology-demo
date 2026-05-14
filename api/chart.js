@@ -176,3 +176,10 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: err.message });
   }
 };
+
+// Named exports for testing (handler remains default export)
+module.exports.signFromLongitude = signFromLongitude;
+module.exports.toJD = toJD;
+module.exports.getSunLongitude = getSunLongitude;
+module.exports.getMoonLongitude = getMoonLongitude;
+module.exports.getAscendant = getAscendant;
