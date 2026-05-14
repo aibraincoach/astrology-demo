@@ -273,8 +273,7 @@
       filter: invert(0.6) sepia(0.4) saturate(2);
       cursor: pointer;
     }
-    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    @media (max-width: 720px) { .field-row { grid-template-columns: 1fr; gap: 0; } }
+    .field-row { display: grid; grid-template-columns: 1fr; gap: 0; }
 
     /* segmented compound inputs (date / time) */
     .seg-input {
@@ -327,7 +326,7 @@
     .seg-input.month-wide { flex-wrap: nowrap; }
     .seg-input .m-pick { min-width: 130px; flex: 0 1 auto; }
     @media (max-width: 400px) {
-      .seg-input { flex-wrap: wrap; gap: 2px; }
+      .seg-input, .seg-input.month-wide { flex-wrap: wrap; gap: 2px; }
       .seg-input input,
       .seg-input select,
       .seg-input > .div { font-size: 18px; padding-top: 6px; padding-bottom: 6px; }
