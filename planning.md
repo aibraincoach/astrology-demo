@@ -3,6 +3,12 @@
 > Last updated: 2026-05-13  
 > App name: Ephemera
 
+## CI execution decision — 2026-09-08
+
+Actions is disabled. [CI_POLICY.md](CI_POLICY.md) records the owner ruling,
+repository evidence, retained checks and outstanding provider blockers. This
+entry does not mark unverified replacement checks as passed or completed.
+
 ## Vision
 A clean, fast, stateless astrology web app. User enters birth data, gets their Big Three (Sun, Moon, Rising) and a synthesized AI personality analysis. No accounts. No database. Done.
 
