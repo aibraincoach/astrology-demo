@@ -4,6 +4,12 @@
 
 ---
 
+## CI audit and migration — 2026-09-08
+
+Actions is disabled. [CI_POLICY.md](CI_POLICY.md) records the owner ruling,
+repository evidence, retained checks and outstanding provider blockers. This
+entry does not mark unverified replacement checks as passed or completed.
+
 ## Milestone 1: Project Setup
 - [x] Create GitHub repo — 2026-05-13
 - [x] Initialize project folder with framework files (PRD, claude.md, planning.md, tasks.md) — 2026-05-13
